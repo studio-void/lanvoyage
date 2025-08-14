@@ -1,0 +1,15 @@
+{
+  "originHash" : "54c6bb022a7b0d37e3267301dee8d9fa32e3920463d379ba86f9407ef2bc785c",
+  "pins" : [
+    {
+      "identity" : "voidutilities",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/studio-void/VoidUtilities",
+      "state" : {
+        "branch" : "main",
+        "revision" : "cd88b738edd1bb8815e016565ad5a7b8c7351a7a"
+      }
+    }
+  ],
+  "version" : 3
+}
