@@ -41,7 +41,7 @@ struct OnboardingCharacterView: View {
             let isStartEnabled = selMeeting || selMail || selAI
             BottomButtonBar(
                 isNextEnabled: isStartEnabled,
-                destination: MainView()
+                destination: MainView().onAppear{UserDefaults.standard.set(true, forKey: "isOnboardingCompleted")}
             )
         }
         .navigationBarTitleDisplayMode(.inline)

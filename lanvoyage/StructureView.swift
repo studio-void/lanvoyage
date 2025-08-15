@@ -8,8 +8,13 @@
 import SwiftUI
 
 struct StructureView: View {
+    @AppStorage("isOnboardingCompleted") var isOnboardingCompleted: Bool = false
     var body: some View {
-        OnboardingMainView()
+        if isOnboardingCompleted {
+            MainView()
+        } else {
+            OnboardingMainView()
+        }
     }
 }
 
