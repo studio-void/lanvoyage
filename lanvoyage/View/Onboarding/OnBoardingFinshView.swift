@@ -17,7 +17,6 @@ enum Constants {
 struct OnboardingCharacterView: View {
     @State private var level: Int = 1
 
-    // 칩 선택 상태(예시)
     @State private var selMeeting = false
     @State private var selMail   = true
     @State private var selAI     = false
@@ -40,7 +39,6 @@ struct OnboardingCharacterView: View {
 
             Spacer(minLength: 0)
 
-            // 활성 조건(원하는 로직으로 교체 가능)
             let isStartEnabled = selMeeting || selMail || selAI
 
             BottomButtonBar(
@@ -91,7 +89,6 @@ private struct CharacterCard: View {
                     .multilineTextAlignment(.center)
             }
 
-            // 칩 3개(균등 분배)
             HStack(spacing: 8) {
                 InformationChipButton(
                     title: "회의",
