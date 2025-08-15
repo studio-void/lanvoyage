@@ -345,7 +345,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		E9BF7F742E4DF8AC0029B239 /* XCRemoteSwiftPackageReference "VoidUtilities" */ = {
+		521659602E4E150300A9294C /* XCRemoteSwiftPackageReference "VoidUtilities" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/studio-void/VoidUtilities";
 			requirement = {
@@ -364,9 +364,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		E9BF7F752E4DF8AC0029B239 /* VoidUtilities */ = {
+		521659612E4E150300A9294C /* VoidUtilities */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E9BF7F742E4DF8AC0029B239 /* XCRemoteSwiftPackageReference "VoidUtilities" */;
+			package = 521659602E4E150300A9294C /* XCRemoteSwiftPackageReference "VoidUtilities" */;
 			productName = VoidUtilities;
 		};
 		E9F9E9952E4EF164005FFAD1 /* SwiftUIX */ = {
