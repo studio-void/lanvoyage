@@ -114,12 +114,12 @@ struct ChooseStudyStyleView: View {
                     Button(action: {
                         presentationMode.wrappedValue.dismiss()
                     }) {
-                        CustomButtonView(title: "이전", kind: .outline) {}
+                        CustomButtonView(title: "이전", kind: .outline)
                             .frame(width: w1)
                             .padding(.leading, 0.2)
                     }
                     NavigationLink(
-                        destination: ChooseStudyStyleView()
+                        destination: OnboardingCharacterView()
                             .navigationBarBackButtonHidden(true)
                     ) {
                         CustomButtonView(

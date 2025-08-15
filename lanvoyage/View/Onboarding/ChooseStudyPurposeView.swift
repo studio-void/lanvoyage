@@ -79,7 +79,7 @@ struct ChooseStudyPurposeView: View {
                     Button(action: {
                         presentationMode.wrappedValue.dismiss()
                     }) {
-                        CustomButtonView(title: "이전", kind: .outline) {}
+                        CustomButtonView(title: "이전", kind: .outline)
                             .frame(width: w1)
                             .padding(.leading, 0.2)
                     }
@@ -90,7 +90,7 @@ struct ChooseStudyPurposeView: View {
                         CustomButtonView(
                             title: "다음",
                             kind: (selected.count != 1) ? .disabled : .filled
-                        ) {}
+                        )
                         .frame(width: w2)
                         .padding(.trailing, 0.2)
                     }.disabled(selected.count != 1)

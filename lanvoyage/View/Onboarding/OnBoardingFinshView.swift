@@ -179,10 +179,10 @@ private struct BottomButtonBar: View {
                 let w2 = (proxy.size.width - spacing) * 2 / 3
 
                 HStack(spacing: spacing) {
-                    CustomButtonView(title: "이전", kind: .outline, action: onBack)
+                    CustomButtonView(title: "이전", kind: .outline)
                         .frame(width: w1)
 
-                    CustomButtonView(title: "이제 시작하기!", kind: .filled, action: onStart)
+                    CustomButtonView(title: "이제 시작하기!", kind: .filled)
                         .frame(width: w2)
                 }
             }
