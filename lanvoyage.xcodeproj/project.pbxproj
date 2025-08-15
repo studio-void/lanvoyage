@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E9BF7F762E4DF8AC0029B239 /* VoidUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = E9BF7F752E4DF8AC0029B239 /* VoidUtilities */; };
+		521659622E4E150300A9294C /* VoidUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 521659612E4E150300A9294C /* VoidUtilities */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E9BF7F762E4DF8AC0029B239 /* VoidUtilities in Frameworks */,
+				521659622E4E150300A9294C /* VoidUtilities in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,7 +70,7 @@
 			);
 			name = lanvoyage;
 			packageProductDependencies = (
-				E9BF7F752E4DF8AC0029B239 /* VoidUtilities */,
+				521659612E4E150300A9294C /* VoidUtilities */,
 			);
 			productName = lanvoyage;
 			productReference = E9DCAAA92E4DF03E0054D342 /* lanvoyage.app */;
@@ -101,7 +101,7 @@
 			mainGroup = E9DCAAA02E4DF03E0054D342;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				E9BF7F742E4DF8AC0029B239 /* XCRemoteSwiftPackageReference "VoidUtilities" */,
+				521659602E4E150300A9294C /* XCRemoteSwiftPackageReference "VoidUtilities" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E9DCAAAA2E4DF03E0054D342 /* Products */;
@@ -341,7 +341,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		E9BF7F742E4DF8AC0029B239 /* XCRemoteSwiftPackageReference "VoidUtilities" */ = {
+		521659602E4E150300A9294C /* XCRemoteSwiftPackageReference "VoidUtilities" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/studio-void/VoidUtilities";
 			requirement = {
@@ -352,9 +352,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		E9BF7F752E4DF8AC0029B239 /* VoidUtilities */ = {
+		521659612E4E150300A9294C /* VoidUtilities */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E9BF7F742E4DF8AC0029B239 /* XCRemoteSwiftPackageReference "VoidUtilities" */;
+			package = 521659602E4E150300A9294C /* XCRemoteSwiftPackageReference "VoidUtilities" */;
 			productName = VoidUtilities;
 		};
 /* End XCSwiftPackageProductDependency section */
