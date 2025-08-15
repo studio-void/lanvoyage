@@ -7,7 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E9BF7F762E4DF8AC0029B239 /* VoidUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = E9BF7F752E4DF8AC0029B239 /* VoidUtilities */; };
+		E99380132E4EF853000F8BE4 /* VoidUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = E99380122E4EF853000F8BE4 /* VoidUtilities */; };
+		E9BF7F762E4DF8AC0029B239 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		E9F9E9962E4EF164005FFAD1 /* SwiftUIX in Frameworks */ = {isa = PBXBuildFile; productRef = E9F9E9952E4EF164005FFAD1 /* SwiftUIX */; };
 /* End PBXBuildFile section */
 
@@ -28,7 +29,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E9BF7F762E4DF8AC0029B239 /* VoidUtilities in Frameworks */,
+				E9BF7F762E4DF8AC0029B239 /* (null) in Frameworks */,
+				E99380132E4EF853000F8BE4 /* VoidUtilities in Frameworks */,
 				E9F9E9962E4EF164005FFAD1 /* SwiftUIX in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -72,8 +74,8 @@
 			);
 			name = lanvoyage;
 			packageProductDependencies = (
-				E9BF7F752E4DF8AC0029B239 /* VoidUtilities */,
 				E9F9E9952E4EF164005FFAD1 /* SwiftUIX */,
+				E99380122E4EF853000F8BE4 /* VoidUtilities */,
 			);
 			productName = lanvoyage;
 			productReference = E9DCAAA92E4DF03E0054D342 /* lanvoyage.app */;
@@ -104,8 +106,8 @@
 			mainGroup = E9DCAAA02E4DF03E0054D342;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				E9BF7F742E4DF8AC0029B239 /* XCRemoteSwiftPackageReference "VoidUtilities" */,
 				E9F9E9942E4EF164005FFAD1 /* XCRemoteSwiftPackageReference "SwiftUIX" */,
+				E99380112E4EF853000F8BE4 /* XCRemoteSwiftPackageReference "VoidUtilities" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E9DCAAAA2E4DF03E0054D342 /* Products */;
@@ -345,7 +347,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		521659602E4E150300A9294C /* XCRemoteSwiftPackageReference "VoidUtilities" */ = {
+		E99380112E4EF853000F8BE4 /* XCRemoteSwiftPackageReference "VoidUtilities" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/studio-void/VoidUtilities";
 			requirement = {
@@ -364,9 +366,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		521659612E4E150300A9294C /* VoidUtilities */ = {
+		E99380122E4EF853000F8BE4 /* VoidUtilities */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 521659602E4E150300A9294C /* XCRemoteSwiftPackageReference "VoidUtilities" */;
+			package = E99380112E4EF853000F8BE4 /* XCRemoteSwiftPackageReference "VoidUtilities" */;
 			productName = VoidUtilities;
 		};
 		E9F9E9952E4EF164005FFAD1 /* SwiftUIX */ = {
