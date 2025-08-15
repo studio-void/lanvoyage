@@ -43,7 +43,7 @@ struct OnboardingCharacterView: View {
 
             BottomButtonBar(
                 isNextEnabled: isStartEnabled,
-                destination: ChooseStudyStyleView()
+                destination: MainView().onAppear{UserDefaults.standard.set(true, forKey: "isOnboardingCompleted")}
             )
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -185,10 +185,6 @@ private struct BottomButtonBar<Destination: View>: View {
         }
         .frame(height: 49)
     }
-}
-
-extension Color {
-    static var violet500: Color { .purple }
 }
 
 // MARK: - Preview
