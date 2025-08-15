@@ -8,10 +8,9 @@
 import SwiftUI
 import VoidUtilities
 
-// 디자인 토큰
 enum Constants {
     static let white  = Color.white
-    static let border = Color.black.opacity(0.12)
+    static let border = Color(hex: "#DBE0E5")
 }
 
 struct OnboardingCharacterView: View {
@@ -40,10 +39,9 @@ struct OnboardingCharacterView: View {
             Spacer(minLength: 0)
 
             let isStartEnabled = selMeeting || selMail || selAI
-
             BottomButtonBar(
                 isNextEnabled: isStartEnabled,
-                destination: ChooseStudyStyleView()
+                destination: MainView()
             )
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -68,7 +66,6 @@ private struct Header: View {
     }
 }
 
-// MARK: - Character Card
 
 private struct CharacterCard: View {
     let level: Int
@@ -121,7 +118,6 @@ private struct CharacterCard: View {
     }
 }
 
-// MARK: - Character Image
 
 private struct CharacterImage: View {
     var body: some View {
@@ -147,10 +143,10 @@ private struct CharacterImage: View {
     }
 }
 
-// MARK: - Bottom Button Bar (presentationMode 사용)
 
 private struct BottomButtonBar<Destination: View>: View {
     @Environment(\.presentationMode) private var presentationMode
+    @State private var showMain = false
 
     var isNextEnabled: Bool
     var destination: Destination
@@ -160,9 +156,9 @@ private struct BottomButtonBar<Destination: View>: View {
             let spacing: CGFloat = 12
             let w1 = (proxy.size.width - spacing) / 3
             let w2 = (proxy.size.width - spacing) * 2 / 3
+            let nextKind: CustomButtonView.Kind = isNextEnabled ? .filled : .disabled
 
             HStack(spacing: spacing) {
-                // 이전: pop 1 (presentationMode 사용)
                 Button {
                     presentationMode.wrappedValue.dismiss()
                 } label: {
@@ -171,12 +167,10 @@ private struct BottomButtonBar<Destination: View>: View {
                         .padding(.leading, 0.2)
                 }
 
-                // 다음: 색은 항상 filled, 동작만 비활성
-                NavigationLink(
-                    destination: destination
-                        .navigationBarBackButtonHidden(true)
-                ) {
-                    CustomButtonView(title: "이제 시작하기!", kind: .filled)
+                Button {
+                    if isNextEnabled { showMain = true }
+                } label: {
+                    CustomButtonView(title: "다음", kind: nextKind)
                         .frame(width: w2)
                         .padding(.trailing, 0.2)
                 }
@@ -184,14 +178,12 @@ private struct BottomButtonBar<Destination: View>: View {
             }
         }
         .frame(height: 49)
+        .fullScreenCover(isPresented: $showMain) {
+            destination
+                .navigationBarBackButtonHidden(true)
+        }
     }
 }
-
-extension Color {
-    static var violet500: Color { .purple }
-}
-
-// MARK: - Preview
 
 #Preview {
     NavigationStack {
