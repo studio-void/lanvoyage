@@ -6,26 +6,24 @@
 //
 
 import SwiftUI
-import VoidUtilities   // Color.violet500/토큰이 여기 있다면 유지
+import VoidUtilities
 
-// 디자인 토큰(프로젝트에 이미 있으면 아래 값은 무시됨)
+// 디자인 토큰
 enum Constants {
     static let white  = Color.white
     static let border = Color.black.opacity(0.12)
 }
 
 struct OnboardingCharacterView: View {
-    // 레벨은 외부 주입 가능. 데모용 기본값
     @State private var level: Int = 1
 
-    // SelectionChip 상태
+    // 칩 선택 상태(예시)
     @State private var selMeeting = false
     @State private var selMail   = true
     @State private var selAI     = false
 
-    // 헤더↔카드 간격 / 카드 고정 크기
     private let headerCardGap: CGFloat = 24
-    private let cardHeight: CGFloat = 522
+    private let cardMinHeight: CGFloat = 522
 
     var body: some View {
         VStack(spacing: 16) {
@@ -37,29 +35,19 @@ struct OnboardingCharacterView: View {
                 selMail: $selMail,
                 selAI: $selAI
             )
-            .padding(.top, headerCardGap)                              // 헤더와 간격 확보
-            .frame(maxWidth: .infinity, minHeight: cardHeight, alignment: .top)
+            .padding(.top, headerCardGap)
+            .frame(maxWidth: .infinity, minHeight: cardMinHeight, alignment: .top)
 
             Spacer(minLength: 0)
 
+            // 활성 조건(원하는 로직으로 교체 가능)
+            let isStartEnabled = selMeeting || selMail || selAI
+
             BottomButtonBar(
-                onBack: {
-                    // 이전 액션
-                },
-                onStart: {
-                    // 시작하기 액션(선택 칩 확인 예시)
-                    let selected = [
-                        selMeeting ? "회의" : nil,
-                        selMail   ? "메일" : nil,
-                        selAI     ? "AI 보정" : nil
-                    ].compactMap { $0 }
-                    print("선택:", selected)
-                }
+                isNextEnabled: isStartEnabled,
+                destination: ChooseStudyStyleView()
             )
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 12)
-        .background(Color(.systemGroupedBackground))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -103,32 +91,33 @@ private struct CharacterCard: View {
                     .multilineTextAlignment(.center)
             }
 
-            // 새로운 InformationChipButton 3개
+            // 칩 3개(균등 분배)
             HStack(spacing: 8) {
-                Spacer()
                 InformationChipButton(
                     title: "회의",
                     kind: .tinted,
                     tint: .mint
                 ) { selMeeting.toggle() }
-                Spacer()
+                .frame(maxWidth: .infinity)
+
                 InformationChipButton(
                     title: "메일",
                     kind: .outlined
                 ) { selMail.toggle() }
-                Spacer()
+                .frame(maxWidth: .infinity)
+
                 InformationChipButton(
                     title: "AI 보정",
                     kind: .plain
                 ) { selAI.toggle() }
-                Spacer()
+                .frame(maxWidth: .infinity)
             }
         }
         .padding(20)
         .background(Constants.white)
         .cornerRadius(12)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .inset(by: 0.5)
                 .stroke(Constants.border, lineWidth: 1)
         )
@@ -161,36 +150,48 @@ private struct CharacterImage: View {
     }
 }
 
-// MARK: - Bottom Button Bar (CustomButtonView 사용)
+// MARK: - Bottom Button Bar (presentationMode 사용)
 
-private struct BottomButtonBar: View {
-    var onBack: () -> Void
-    var onStart: () -> Void
+private struct BottomButtonBar<Destination: View>: View {
+    @Environment(\.presentationMode) private var presentationMode
+
+    var isNextEnabled: Bool
+    var destination: Destination
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color(.systemGroupedBackground))
-                .frame(height: 76)
+        GeometryReader { proxy in
+            let spacing: CGFloat = 12
+            let w1 = (proxy.size.width - spacing) / 3
+            let w2 = (proxy.size.width - spacing) * 2 / 3
 
-            GeometryReader { proxy in
-                let spacing: CGFloat = 16
-                let w1 = (proxy.size.width - spacing) / 3
-                let w2 = (proxy.size.width - spacing) * 2 / 3
-
-                HStack(spacing: spacing) {
+            HStack(spacing: spacing) {
+                // 이전: pop 1 (presentationMode 사용)
+                Button {
+                    presentationMode.wrappedValue.dismiss()
+                } label: {
                     CustomButtonView(title: "이전", kind: .outline)
                         .frame(width: w1)
+                        .padding(.leading, 0.2)
+                }
 
+                // 다음: 색은 항상 filled, 동작만 비활성
+                NavigationLink(
+                    destination: destination
+                        .navigationBarBackButtonHidden(true)
+                ) {
                     CustomButtonView(title: "이제 시작하기!", kind: .filled)
                         .frame(width: w2)
+                        .padding(.trailing, 0.2)
                 }
+                .disabled(!isNextEnabled)
             }
-            .frame(height: 64)
-            .padding(.horizontal, 20)
         }
-        .padding(.bottom, 8)
+        .frame(height: 49)
     }
+}
+
+extension Color {
+    static var violet500: Color { .purple }
 }
 
 // MARK: - Preview
