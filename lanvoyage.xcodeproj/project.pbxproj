@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		E9BF7F762E4DF8AC0029B239 /* VoidUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = E9BF7F752E4DF8AC0029B239 /* VoidUtilities */; };
+		E9F9E9962E4EF164005FFAD1 /* SwiftUIX in Frameworks */ = {isa = PBXBuildFile; productRef = E9F9E9952E4EF164005FFAD1 /* SwiftUIX */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E9BF7F762E4DF8AC0029B239 /* VoidUtilities in Frameworks */,
+				E9F9E9962E4EF164005FFAD1 /* SwiftUIX in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +73,7 @@
 			name = lanvoyage;
 			packageProductDependencies = (
 				E9BF7F752E4DF8AC0029B239 /* VoidUtilities */,
+				E9F9E9952E4EF164005FFAD1 /* SwiftUIX */,
 			);
 			productName = lanvoyage;
 			productReference = E9DCAAA92E4DF03E0054D342 /* lanvoyage.app */;
@@ -102,6 +105,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				E9BF7F742E4DF8AC0029B239 /* XCRemoteSwiftPackageReference "VoidUtilities" */,
+				E9F9E9942E4EF164005FFAD1 /* XCRemoteSwiftPackageReference "SwiftUIX" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E9DCAAAA2E4DF03E0054D342 /* Products */;
@@ -349,6 +353,14 @@
 				kind = branch;
 			};
 		};
+		E9F9E9942E4EF164005FFAD1 /* XCRemoteSwiftPackageReference "SwiftUIX" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SwiftUIX/SwiftUIX";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.2.4;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -356,6 +368,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E9BF7F742E4DF8AC0029B239 /* XCRemoteSwiftPackageReference "VoidUtilities" */;
 			productName = VoidUtilities;
+		};
+		E9F9E9952E4EF164005FFAD1 /* SwiftUIX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E9F9E9942E4EF164005FFAD1 /* XCRemoteSwiftPackageReference "SwiftUIX" */;
+			productName = SwiftUIX;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
