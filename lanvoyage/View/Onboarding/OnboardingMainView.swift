@@ -17,6 +17,7 @@ struct OnboardingMainView: View {
             
             NavigationView {
                 ChooseStudyPurposeView()
+                    .navigationBarBackButtonHidden(true)
             }
             
             Spacer()
