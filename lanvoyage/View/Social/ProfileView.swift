@@ -17,32 +17,6 @@ private enum Token {
     static let radius: CGFloat = 12
 }
 
-struct ProfileTabRoot: View {
-    @State private var selection = 2
-
-    var body: some View {
-        TabView(selection: $selection) {
-            Text("Home")
-                .tabItem { Label("Home", systemImage: "house.fill") }
-                .tag(0)
-
-            Text("Learn")
-                .tabItem { Label("Learn", systemImage: "graduationcap.fill") }
-                .tag(1)
-
-            NavigationStack {
-                ProfileView()
-            }
-            .tabItem { Label("Profile", systemImage: "person.fill") }
-            .tag(2)
-
-            Text("Chat")
-                .tabItem { Label("Chat", systemImage: "bubble.left.and.bubble.right.fill") }
-                .tag(3)
-        }
-    }
-}
-
 struct ProfileView: View {
     @State private var level: Int = 3
     @State private var title: String = "비즈니스 협상가"
@@ -198,5 +172,5 @@ extension Color {
 }
 
 #Preview {
-    ProfileTabRoot()
+    ProfileView()
 }
