@@ -27,6 +27,7 @@ struct QuickResponseChallengeView: View {
     @State var isPlaying = false
     @State var timer: Timer?
     @State var elapsedSeconds: Int = 0
+    @State private var pointsAwardedForThisAttempt: Bool = false
     @Environment(\.presentationMode) var presentationMode
 
     var timerString: String {
@@ -44,6 +45,13 @@ struct QuickResponseChallengeView: View {
     func stopTimer() {
         timer?.invalidate()
         timer = nil
+    }
+    
+    private func computePoints(score: Int, elapsed: Int) -> Int {
+        // Base: score/10, Time bonus: every 20s saved up to 60s
+        let base = max(0, score / 10)
+        let timeBonus = max(0, (60 - elapsed) / 20)
+        return base + timeBonus
     }
 
     var body: some View {
@@ -135,7 +143,7 @@ struct QuickResponseChallengeView: View {
                 
                 if isGenerating {
                     ProgressView()
-                } else if let question = questionSentence, !generatingAvailable {
+                } else if let question = questionSentence {
                     VStack(spacing: 8) {
                         HStack {
                             Spacer()
@@ -175,6 +183,7 @@ struct QuickResponseChallengeView: View {
                                 )
                                 quickResponseData = newData
                                 isRecording = true
+                                pointsAwardedForThisAttempt = false
                             } else {
                                 arManager.stopRecording()
                                 stopTimer()
@@ -185,13 +194,21 @@ struct QuickResponseChallengeView: View {
                                     arManager.stopAudio()
                                     isPlaying = false
                                 }
+                                let elapsedAtStop = elapsedSeconds
                                 Task {
-                                    quickResponseReturn = await quickResponseChallengeManager.gradeResponse(data: quickResponseData!)
-                                    
-                                    let pointsToAdd = (quickResponseReturn?.score ?? 0) / 10 + (60 - elapsedSeconds)>0 ? ((60 - elapsedSeconds) / 20) : 0
-                                    userPointsManager.addPoints(pointsToAdd)
+                                    let result = await quickResponseChallengeManager.gradeResponse(data: quickResponseData!)
+                                    await MainActor.run {
+                                        self.quickResponseReturn = result
+                                        if !pointsAwardedForThisAttempt {
+                                            let score = result.score
+                                            let pointsToAdd = computePoints(score: score, elapsed: elapsedAtStop)
+                                            userPointsManager.addPoints(pointsToAdd)
+                                            pointsAwardedForThisAttempt = true
+                                        }
+                                        gradingDone = true
+                                        generatingAvailable = true
+                                    }
                                 }
-                                gradingDone = true
                             }
                         }) {
                             Image(
