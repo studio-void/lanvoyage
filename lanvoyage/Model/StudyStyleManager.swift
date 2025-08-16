@@ -33,33 +33,83 @@ public enum TargetPeriod: String, CaseIterable {
     case oneYear = "1년"
 }
 
+public enum Role: String, CaseIterable {
+    case business = "비즈니스"
+    case student = "학생"
+    case traveler = "여행자"
+}
+
 public class StudyStyleManager {
     public let userDefaults = UserDefaults.standard
+    
     public func setStudyPurpose(studyPurpose: Set<String>) {
         userDefaults.set(Array(studyPurpose), forKey: "studyPurpose")
     }
+    
     public func setStudyStyle(studyStyle: Set<String>) {
         userDefaults.set(Array(studyStyle), forKey: "studyStyle")
     }
+    
     public func setTargetPeriod(targetPeriod: Set<String>) {
         userDefaults.set(Array(targetPeriod), forKey: "targetPeriod")
     }
+    
     public func getStudyPurpose() -> Set<String>? {
+<<<<<<< Updated upstream
         if let arr = userDefaults.array(forKey: "studyPurpose") as? [String] {
             return Set(arr)
         }
         return nil
+=======
+        guard
+            let studyPurposeSet = userDefaults.object(forKey: "studyPurpose")
+                as? Set<String>
+        else { return nil }
+        return studyPurposeSet
+>>>>>>> Stashed changes
     }
+    
     public func getStudyStyle() -> Set<String>? {
+<<<<<<< Updated upstream
         if let arr = userDefaults.array(forKey: "studyStyle") as? [String] {
             return Set(arr)
         }
         return nil
+=======
+        guard
+            let studyStyleSet = userDefaults.object(forKey: "studyStyle")
+                as? Set<String>
+        else { return nil }
+        return studyStyleSet
+>>>>>>> Stashed changes
     }
+    
     public func getTargetPeriod() -> Set<String>? {
+<<<<<<< Updated upstream
         if let arr = userDefaults.array(forKey: "targetPeriod") as? [String] {
             return Set(arr)
         }
         return nil
+=======
+        guard
+            let targetPeriodSet = userDefaults.object(forKey: "targetPeriod")
+                as? Set<String>
+        else { return nil }
+        return targetPeriodSet
+>>>>>>> Stashed changes
+    }
+    
+    public func chooseRole() -> Role {
+        let studyPurpose = getStudyPurpose() ?? []
+        if let firstPurpose = studyPurpose.first {
+            if firstPurpose == "비즈니스/업무" {
+                return .business
+            } else if firstPurpose == "여행 회화" {
+                return .traveler
+            } else {
+                return .student
+            }
+        }
+        return .student
     }
 }
