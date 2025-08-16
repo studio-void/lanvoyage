@@ -10,6 +10,10 @@ import SwiftUI
 struct ChattingMainView: View {
     @State private var showChat = false
     @State private var isPressing = false
+    @State private var summaries: [ChatSummary] = []
+
+    @State private var showDeleteDialog = false
+    @State private var targetToDelete: ChatSummary?
 
     var body: some View {
         ScrollView {
@@ -17,16 +21,13 @@ struct ChattingMainView: View {
                 HStack {
                     Spacer()
                     Text("AI Mentor")
-                        .font(.title3)
-                        .fontWeight(.bold)
+                        .font(.title3).fontWeight(.bold)
                     Spacer()
                 }
-                .padding(.top, 0)
                 .padding(.bottom, 12)
 
                 Text("AI Mentor와 대화해보세요!")
-                    .font(.title2)
-                    .fontWeight(.bold)
+                    .font(.title2).fontWeight(.bold)
 
                 CustomButtonView(
                     title: "채팅하러 가기",
@@ -35,57 +36,79 @@ struct ChattingMainView: View {
                 .onLongPressGesture(
                     minimumDuration: 0,
                     maximumDistance: 50,
-                    pressing: { down in
-                        isPressing = down
-                    },
-                    perform: {
-                        showChat = true
-                    }
+                    pressing: { down in isPressing = down },
+                    perform: { showChat = true }
                 )
 
                 Text("채팅 기록 모아보기")
                     .font(.headline)
                     .padding(.top, 30)
 
-                let columns = [
-                    GridItem(.flexible(), spacing: 16),
-                    GridItem(.flexible(), spacing: 16),
-                ]
-
-                LazyVGrid(columns: columns, alignment: .leading, spacing: 16) {
-                    ChatCardView(
-                        title: "AI 영어 효율적 공부",
-                        keyWord: "문맥 이해",
-                        details: "단순 번역이 아닌\n문화적 뉘앙스 이해"
-                    )
-                    ChatCardView(
-                        title: "스피킹 발음 교정",
-                        keyWord: "발음, 억양",
-                        details: "발음 오류 즉시 교정,\n억양 개선 훈련"
-                    )
-                    ChatCardView(
-                        title: "AI로 해외 뉴스 분석",
-                        keyWord: "시사 영어",
-                        details: "최신 글로벌 뉴스의\n핵심 영어 표현 학습"
-                    )
-                    ChatCardView(
-                        title: "이메일 영어 피드백",
-                        keyWord: "비즈니스",
-                        details: "작성한 이메일 검토,\n자연스럽게 고치기"
-                    )
+                if summaries.isEmpty {
+                    Text("채팅 기록이 없습니다.")
+                        .foregroundColor(.gray)
+                        .padding(.top, 16)
+                } else {
+                    let columns = [
+                        GridItem(.flexible(), spacing: 16),
+                        GridItem(.flexible(), spacing: 16),
+                    ]
+                    LazyVGrid(columns: columns, alignment: .leading, spacing: 16) {
+                        ForEach(Array(summaries.prefix(10))) { s in
+                            ChatCardView(
+                                title: s.title,
+                                keyWord: s.keyWord,
+                                details: s.details
+                            )
+                            .contentShape(RoundedRectangle(cornerRadius: 16))
+                            .onLongPressGesture {
+                                targetToDelete = s
+                                showDeleteDialog = true
+                            }
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    delete(summary: s)
+                                } label: {
+                                    Label("삭제", systemImage: "trash")
+                                }
+                            }
+                        }
+                    }
                 }
             }
+            .padding(.horizontal, 16)
             .padding(.bottom, 24)
         }
-        .fullScreenCover(isPresented: $showChat) {
+        .scrollIndicators(.visible)
+        .onAppear { summaries = ChatStore.load() }
+        .confirmationDialog(
+            "이 기록을 삭제할까요?",
+            isPresented: $showDeleteDialog,
+            presenting: targetToDelete
+        ) { s in
+            Button("삭제", role: .destructive) { delete(summary: s) }
+            Button("취소", role: .cancel) { }
+        } message: { _ in
+            Text("삭제 후에는 되돌릴 수 없습니다.")
+        }
+        .fullScreenCover(isPresented: $showChat, onDismiss: {
+            summaries = ChatStore.load()
+            isPressing = false
+        }) {
             NavigationStack {
-                ChatView()
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbarBackground(.visible, for: .navigationBar)
-                    .toolbar(.visible, for: .navigationBar)
-                    .navigationBarHidden(false)
+                ChatView(autoFocus: true) {
+                    showChat = false
+                }
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.visible, for: .navigationBar)
+                .toolbar(.visible, for: .navigationBar)
             }
         }
+    }
+
+    private func delete(summary: ChatSummary) {
+        ChatStore.delete(id: summary.id)
+        summaries = ChatStore.load()
     }
 }
 
@@ -99,17 +122,21 @@ private struct ChatCardView: View {
             Text(title)
                 .font(.footnote)
                 .foregroundColor(.black.opacity(0.8))
+                .lineLimit(1)
 
             Text(keyWord)
                 .font(.headline).bold()
                 .foregroundColor(.primary)
+                .lineLimit(1)
 
             Text(details)
                 .font(.subheadline)
                 .foregroundColor(.black.opacity(0.7))
+                .lineLimit(3)
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: 148)
         .background(Color(.systemGray6))
         .cornerRadius(16)
     }
