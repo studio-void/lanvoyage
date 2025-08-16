@@ -78,8 +78,13 @@ struct ChattingMainView: View {
             .padding(.bottom, 24)
         }
         .fullScreenCover(isPresented: $showChat) {
-            ChatView()
-                .ignoresSafeArea()
+            NavigationStack {
+                ChatView()
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbarBackground(.visible, for: .navigationBar)
+                    .toolbar(.visible, for: .navigationBar)
+                    .navigationBarHidden(false)
+            }
         }
     }
 }

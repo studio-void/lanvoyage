@@ -36,24 +36,30 @@ public enum TargetPeriod: String, CaseIterable {
 public class StudyStyleManager {
     public let userDefaults = UserDefaults.standard
     public func setStudyPurpose(studyPurpose: Set<String>) {
-        userDefaults.set(studyPurpose, forKey: "studyPurpose")
+        userDefaults.set(Array(studyPurpose), forKey: "studyPurpose")
     }
     public func setStudyStyle(studyStyle: Set<String>) {
-        userDefaults.set(studyStyle, forKey: "studyStyle")
+        userDefaults.set(Array(studyStyle), forKey: "studyStyle")
     }
     public func setTargetPeriod(targetPeriod: Set<String>) {
-        userDefaults.set(targetPeriod, forKey: "targetPeriod")
+        userDefaults.set(Array(targetPeriod), forKey: "targetPeriod")
     }
     public func getStudyPurpose() -> Set<String>? {
-        guard let studyPurposeSet = userDefaults.object(forKey: "studyPurpose") as? Set<String> else { return nil }
-        return studyPurposeSet
+        if let arr = userDefaults.array(forKey: "studyPurpose") as? [String] {
+            return Set(arr)
+        }
+        return nil
     }
     public func getStudyStyle() -> Set<String>? {
-        guard let studyStyleSet = userDefaults.object(forKey: "studyStyle") as? Set<String> else { return nil }
-        return studyStyleSet
+        if let arr = userDefaults.array(forKey: "studyStyle") as? [String] {
+            return Set(arr)
+        }
+        return nil
     }
     public func getTargetPeriod() -> Set<String>? {
-        guard let targetPeriodSet = userDefaults.object(forKey: "targetPeriod") as? Set<String> else { return nil }
-        return targetPeriodSet
+        if let arr = userDefaults.array(forKey: "targetPeriod") as? [String] {
+            return Set(arr)
+        }
+        return nil
     }
 }
