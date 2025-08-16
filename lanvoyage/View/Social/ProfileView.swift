@@ -29,15 +29,22 @@ struct ProfileView: View {
     var progress: Double { xp / xpMax }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                avatarBlock()
-                progressBlock()
-                overallBlock()
+        NavigationView{
+            VStack{
+                ScrollView {
+                    VStack(spacing: 16) {
+                        avatarBlock()
+                        progressBlock()
+                        overallBlock()
+                    }
+                }
+                Spacer()
+                NavigationLink(destination: AnalysisResultView().navigationBarBackButtonHidden(true))
+                {
+                    CustomButtonView(title: "학습 분석 결과 보러가기", kind: .outline)
+                }
             }
         }
-        .navigationTitle("Profile")
-        .navigationBarTitleDisplayMode(.inline)
     }
 
     private func avatarBlock() -> some View {

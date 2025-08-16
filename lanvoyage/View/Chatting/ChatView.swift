@@ -1,5 +1,5 @@
 //
-//  ChattingMainView.swift
+//  ChatView.swift
 //  lanvoyage
 //
 //  Created by 임정훈 on 8/15/25.
@@ -8,7 +8,7 @@
 import SwiftUI
 import VoidUtilities
 
-struct ChattingMainView: View {
+struct ChatView: View {
     @State private var text: String = ""
 
     struct Message: Identifiable {
@@ -142,5 +142,5 @@ struct ChattingMainView: View {
 }
 
 #Preview {
-    NavigationView { ChattingMainView() }
+    NavigationView { ChatView() }
 }

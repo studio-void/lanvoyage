@@ -30,7 +30,7 @@ struct MainView: View {
                 ProfileView()
                     .padding()
             case .chat:
-                ChattingMainView()
+                ChatView()
                     .padding()
             }
             Spacer()
