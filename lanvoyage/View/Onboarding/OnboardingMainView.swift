@@ -16,7 +16,7 @@ struct OnboardingMainView: View {
         VStack {
             
             NavigationView {
-                ChooseStudyPurposeView()
+                WelcomeView()
                     .navigationBarBackButtonHidden(true)
             }
             
