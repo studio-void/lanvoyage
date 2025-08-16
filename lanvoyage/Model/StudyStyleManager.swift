@@ -55,48 +55,24 @@ public class StudyStyleManager {
     }
     
     public func getStudyPurpose() -> Set<String>? {
-<<<<<<< Updated upstream
         if let arr = userDefaults.array(forKey: "studyPurpose") as? [String] {
             return Set(arr)
         }
         return nil
-=======
-        guard
-            let studyPurposeSet = userDefaults.object(forKey: "studyPurpose")
-                as? Set<String>
-        else { return nil }
-        return studyPurposeSet
->>>>>>> Stashed changes
     }
     
     public func getStudyStyle() -> Set<String>? {
-<<<<<<< Updated upstream
         if let arr = userDefaults.array(forKey: "studyStyle") as? [String] {
             return Set(arr)
         }
         return nil
-=======
-        guard
-            let studyStyleSet = userDefaults.object(forKey: "studyStyle")
-                as? Set<String>
-        else { return nil }
-        return studyStyleSet
->>>>>>> Stashed changes
     }
     
     public func getTargetPeriod() -> Set<String>? {
-<<<<<<< Updated upstream
         if let arr = userDefaults.array(forKey: "targetPeriod") as? [String] {
             return Set(arr)
         }
         return nil
-=======
-        guard
-            let targetPeriodSet = userDefaults.object(forKey: "targetPeriod")
-                as? Set<String>
-        else { return nil }
-        return targetPeriodSet
->>>>>>> Stashed changes
     }
     
     public func chooseRole() -> Role {
