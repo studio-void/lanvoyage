@@ -137,9 +137,9 @@ struct QuickResponseChallengeView: View {
                             .padding()
                         Spacer()
                     }
-                    .background(Color.white)
+                    .background(Color.violet50)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .shadow(radius: 2)
+                    .padding(.bottom)
                     HStack(spacing: 4) {
                         Image(systemName: "timer")
                             .foregroundStyle(Color.violet500)
