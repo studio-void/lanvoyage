@@ -47,16 +47,22 @@ struct ChatView: View {
             .background(Color.gray50.ignoresSafeArea())
 
             HStack {
-                Text("AI 멘토와 대화하세요.")
+                TextField("AI 멘토와 대화하세요.", text: $text)
                     .font(.callout)
                     .foregroundStyle(Color.gray600)
                     .padding(.vertical, 12)
                     .padding(.horizontal, 14)
-                    .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
                         RoundedRectangle(cornerRadius: 12).fill(Color.gray100)
                     )
+                Button(action:{
+                    
+                }){
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.largeTitle)
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(Color.white)
