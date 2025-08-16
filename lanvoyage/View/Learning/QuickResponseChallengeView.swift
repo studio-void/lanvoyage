@@ -14,6 +14,7 @@ struct QuickResponseChallengeView: View {
     @State var studyStyleManager = StudyStyleManager()
     @State var quickResponseChallengeManager = QuickResponseChallengeManager()
     @State var quickResponseReturn: QuickResponseReturnType?
+    @State var userPointsManager = UserPointsManager()
     @State var resultPath = ""
     @State var questionSentence: String?
     @State var answerSentence: String?
@@ -186,6 +187,9 @@ struct QuickResponseChallengeView: View {
                                 }
                                 Task {
                                     quickResponseReturn = await quickResponseChallengeManager.gradeResponse(data: quickResponseData!)
+                                    
+                                    let pointsToAdd = (quickResponseReturn?.score ?? 0) / 10 + (60 - elapsedSeconds)>0 ? ((60 - elapsedSeconds) / 20) : 0
+                                    userPointsManager.addPoints(pointsToAdd)
                                 }
                                 gradingDone = true
                             }
