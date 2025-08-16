@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum StudyPurpose: String, CaseIterable {
+public enum StudyPurpose: String, CaseIterable {
     case studyAbroad = "유학/교환학생"
     case travel = "여행 회화"
     case business = "비즈니스/업무"
@@ -16,7 +16,7 @@ enum StudyPurpose: String, CaseIterable {
     case ai = "AI 활용 능력 강화"
 }
 
-enum StudyStyle: String, CaseIterable {
+public enum StudyStyle: String, CaseIterable {
     case shortFrequently = "짧고 자주"
     case longFocused = "길게 몰입"
     case grammarFocused = "문법 중심"
@@ -25,7 +25,7 @@ enum StudyStyle: String, CaseIterable {
     case examFocused = "시험 위주"
 }
 
-enum TargetPeriod: String, CaseIterable {
+public enum TargetPeriod: String, CaseIterable {
     case twoWeeks = "2주"
     case oneMonth = "1개월"
     case threeMonths = "3개월"
@@ -33,6 +33,27 @@ enum TargetPeriod: String, CaseIterable {
     case oneYear = "1년"
 }
 
-class StudyStyleManager {
-    
+public class StudyStyleManager {
+    public let userDefaults = UserDefaults.standard
+    public func setStudyPurpose(studyPurpose: StudyPurpose) {
+        userDefaults.set(studyPurpose.rawValue, forKey: "studyPurpose")
+    }
+    public func setStudyStyle(studyStyle: StudyStyle) {
+        userDefaults.set(studyStyle.rawValue, forKey: "studyStyle")
+    }
+    public func setTargetPeriod(targetPeriod: TargetPeriod) {
+        userDefaults.set(targetPeriod.rawValue, forKey: "targetPeriod")
+    }
+    public func getStudyPurpose() -> StudyPurpose? {
+        guard let studyPurposeString = userDefaults.string(forKey: "studyPurpose") else { return nil }
+        return StudyPurpose(rawValue: studyPurposeString)
+    }
+    public func getStudyStyle() -> StudyStyle? {
+        guard let studyStyleString = userDefaults.string(forKey: "studyStyle") else { return nil }
+        return StudyStyle(rawValue: studyStyleString)
+    }
+    public func getTargetPeriod() -> TargetPeriod? {
+        guard let targetPeriodString = userDefaults.string(forKey: "targetPeriod") else { return nil }
+        return TargetPeriod(rawValue: targetPeriodString)
+    }
 }
