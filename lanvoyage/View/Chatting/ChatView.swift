@@ -11,6 +11,7 @@ import FirebaseAI
 
 struct ChatView: View {
     enum Role { case user, bot }
+
     struct ChatMessage: Identifiable {
         let id = UUID()
         let role: Role
@@ -19,13 +20,30 @@ struct ChatView: View {
 
     private let model: GenerativeModel
 
+    // MARK: - Init (Gemini + 시스템 프롬프트)
     var autoFocus: Bool = true
     init(autoFocus: Bool = true) {
         self.autoFocus = autoFocus
+
         let firebase = FirebaseAI.firebaseAI()
-        self.model = firebase.generativeModel(modelName: "gemini-2.0-flash-001")
+
+        let systemPrompt = ModelContent(
+            role: "system",
+            parts: ["""
+            너는 GIST 학생들의 외국어(특히 영어) 학습을 돕는 AI 멘토야.
+            - 영어 학습 질문에는 간단한 설명과 예문 2개 이상을 제공해.
+            - 진로/학습 전략은 단계별로, 실행 가능한 조언으로 정리해.
+            - 답변은 너무 길지 않게, 쉬운 문장으로 또박또박 하도록 해.
+            """]
+        )
+
+        self.model = firebase.generativeModel(
+            modelName: "gemini-2.0-flash-001",
+            systemInstruction: systemPrompt
+        )
     }
 
+    // MARK: - State
     @State private var messages: [ChatMessage] = [
         .init(role: .bot, text: "Hi there! I'm your AI mentor.\nHow can I help you today?")
     ]
@@ -34,6 +52,7 @@ struct ChatView: View {
     @State private var scrollTarget: UUID?
     @State private var busy = false
 
+    // MARK: - UI
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
@@ -69,54 +88,53 @@ struct ChatView: View {
     @ViewBuilder
     private func messageRow(_ m: ChatMessage) -> some View {
         if m.role == .user {
-            HStack(spacing: 8) {
+            HStack(alignment: .top, spacing: 8) {
                 Spacer(minLength: 0)
-                HStack(spacing: 8) {
-                    Spacer()
-                    bubble(m.text, isUser: true)
-                        .overlay(alignment: .topTrailing) {
-                            Text("GIST")
-                                .font(.caption2)
-                                .foregroundColor(.gray)
-                                .padding(.top, -12)
-                                .padding(.trailing, 4)
-                        }
+
+                bubble(m.text, isUser: true)
+
+                VStack(spacing: 2) {
+                    Text("GIST")
+                        .font(.caption2)
+                        .foregroundColor(.gray)
                     userAvatar
                 }
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
+
         } else {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("AI Mentor")
-                    .font(.caption2)
-                    .foregroundColor(.gray)
-                HStack(spacing: 8) {
+            HStack(alignment: .top, spacing: 8) {
+                VStack(spacing: 2) {
+                    Text("AI Mentor")
+                        .font(.caption2)
+                        .foregroundColor(.gray)
                     botAvatar
-                    bubble(m.text, isUser: false)
-                    Spacer(minLength: 0)
                 }
+
+                bubble(m.text, isUser: false)
+
+                Spacer(minLength: 0)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
+    // MARK: - Bubble
     private func bubble(_ text: String, isUser: Bool) -> some View {
-        HStack {
-            if isUser { Spacer() }
-            Text(text)
-                .font(.body)
-                .foregroundColor(isUser ? .white : .primary)
-                .padding(.vertical, 10)
-                .padding(.horizontal, 14)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(isUser ? Color.violet500 : Color(.systemGray6))
-                )
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: 280, alignment: isUser ? .trailing : .leading)
+        Text(text)
+            .font(.body)
+            .foregroundColor(isUser ? .white : .primary)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 14)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(isUser ? Color.violet500 : Color(.systemGray6))
+            )
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: 280, alignment: isUser ? .trailing : .leading)
     }
 
+    // MARK: - Avatars
     private var botAvatar: some View {
         Circle()
             .fill(Color(.systemGray5))
@@ -131,6 +149,7 @@ struct ChatView: View {
             .overlay(Image(systemName: "person.crop.circle.fill").foregroundColor(.white))
     }
 
+    // MARK: - Input
     private var inputBar: some View {
         HStack(spacing: 12) {
             TextField("AI 멘토와 대화해보세요.", text: $input, axis: .vertical)
@@ -141,7 +160,7 @@ struct ChatView: View {
                 .background(RoundedRectangle(cornerRadius: 12).fill(Color(.systemGray6)))
                 .focused($focused)
 
-            Button { send() } label: {
+            Button(action: send) {
                 Image(systemName: busy ? "stop.circle.fill" : "arrow.up.circle.fill")
                     .font(.system(size: 28, weight: .semibold))
             }
@@ -152,7 +171,7 @@ struct ChatView: View {
         .background(Color(.systemBackground).opacity(0.98))
     }
 
-    // MARK: - Gemini 호출
+    // MARK: - Gemini Call
     private func send() {
         let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, busy == false else { return }
