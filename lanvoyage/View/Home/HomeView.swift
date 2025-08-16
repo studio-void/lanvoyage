@@ -84,8 +84,11 @@ struct RecommendedLearningCardView: View {
             Text(title)
                 .font(.headline)
                 .fontWeight(.semibold)
+                .multilineTextAlignment(.leading)
+                .foregroundStyle(Color.primary)
             Text(description)
                 .foregroundStyle(Color.gray600)
+                .multilineTextAlignment(.leading)
         }
         .padding(.bottom, 16)
     }
