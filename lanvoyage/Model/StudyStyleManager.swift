@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum StudyPurpose: String, CaseIterable {
+public enum StudyPurpose: String, CaseIterable {
     case studyAbroad = "유학/교환학생"
     case travel = "여행 회화"
     case business = "비즈니스/업무"
@@ -16,7 +16,7 @@ enum StudyPurpose: String, CaseIterable {
     case ai = "AI 활용 능력 강화"
 }
 
-enum StudyStyle: String, CaseIterable {
+public enum StudyStyle: String, CaseIterable {
     case shortFrequently = "짧고 자주"
     case longFocused = "길게 몰입"
     case grammarFocused = "문법 중심"
@@ -25,7 +25,7 @@ enum StudyStyle: String, CaseIterable {
     case examFocused = "시험 위주"
 }
 
-enum TargetPeriod: String, CaseIterable {
+public enum TargetPeriod: String, CaseIterable {
     case twoWeeks = "2주"
     case oneMonth = "1개월"
     case threeMonths = "3개월"
@@ -33,6 +33,27 @@ enum TargetPeriod: String, CaseIterable {
     case oneYear = "1년"
 }
 
-class StudyStyleManager {
-    
+public class StudyStyleManager {
+    public let userDefaults = UserDefaults.standard
+    public func setStudyPurpose(studyPurpose: Set<String>) {
+        userDefaults.set(studyPurpose, forKey: "studyPurpose")
+    }
+    public func setStudyStyle(studyStyle: Set<String>) {
+        userDefaults.set(studyStyle, forKey: "studyStyle")
+    }
+    public func setTargetPeriod(targetPeriod: Set<String>) {
+        userDefaults.set(targetPeriod, forKey: "targetPeriod")
+    }
+    public func getStudyPurpose() -> Set<String>? {
+        guard let studyPurposeSet = userDefaults.object(forKey: "studyPurpose") as? Set<String> else { return nil }
+        return studyPurposeSet
+    }
+    public func getStudyStyle() -> Set<String>? {
+        guard let studyStyleSet = userDefaults.object(forKey: "studyStyle") as? Set<String> else { return nil }
+        return studyStyleSet
+    }
+    public func getTargetPeriod() -> Set<String>? {
+        guard let targetPeriodSet = userDefaults.object(forKey: "targetPeriod") as? Set<String> else { return nil }
+        return targetPeriodSet
+    }
 }
