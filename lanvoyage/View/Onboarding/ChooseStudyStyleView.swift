@@ -9,6 +9,7 @@ import SwiftUI
 import VoidUtilities
 
 struct ChooseStudyStyleView: View {
+    @State var studyStyleManager = StudyStyleManager()
     @State var studyStyle: StudyStyle?
     @State private var selectedStyles: Set<String> = []
     @State var targetPeriod: TargetPeriod?
@@ -68,7 +69,7 @@ struct ChooseStudyStyleView: View {
                     .padding(.horizontal, 0.8)
                 }
                 .onChange(of: selectedStyles) {
-                    print("selectedStyles: \(selectedStyles)")
+                    studyStyleManager.setStudyStyle(studyStyle: selectedStyles)
                 }
             }
             .padding(.bottom)
@@ -101,8 +102,8 @@ struct ChooseStudyStyleView: View {
                 }
                 .padding(.bottom, 2)
             }
-            .onChange(of: selectedStyles) {
-                print("selectedStyles: \(selectedStyles)")
+            .onChange(of: selectedPeriod) {
+                studyStyleManager.setTargetPeriod(targetPeriod: selectedPeriod)
             }
             Spacer()
             GeometryReader { proxy in

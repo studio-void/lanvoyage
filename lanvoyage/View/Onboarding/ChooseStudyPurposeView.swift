@@ -9,6 +9,7 @@ import SwiftUI
 import VoidUtilities
 
 struct ChooseStudyPurposeView: View {
+    @State var studyStyleManager = StudyStyleManager()
     @State var studyPurpose: StudyPurpose?
     @State private var selected: Set<String> = []
     @Environment(\.presentationMode) var presentationMode
@@ -66,7 +67,7 @@ struct ChooseStudyPurposeView: View {
                     .padding(.horizontal, 0.8)
                 }
                 .onChange(of: selected) {
-                    print("selected: \(selected)")
+                    studyStyleManager.setStudyPurpose(studyPurpose: selected)
                 }
             }
             Spacer()

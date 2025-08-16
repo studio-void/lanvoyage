@@ -35,25 +35,25 @@ public enum TargetPeriod: String, CaseIterable {
 
 public class StudyStyleManager {
     public let userDefaults = UserDefaults.standard
-    public func setStudyPurpose(studyPurpose: StudyPurpose) {
-        userDefaults.set(studyPurpose.rawValue, forKey: "studyPurpose")
+    public func setStudyPurpose(studyPurpose: Set<String>) {
+        userDefaults.set(studyPurpose, forKey: "studyPurpose")
     }
-    public func setStudyStyle(studyStyle: StudyStyle) {
-        userDefaults.set(studyStyle.rawValue, forKey: "studyStyle")
+    public func setStudyStyle(studyStyle: Set<String>) {
+        userDefaults.set(studyStyle, forKey: "studyStyle")
     }
-    public func setTargetPeriod(targetPeriod: TargetPeriod) {
-        userDefaults.set(targetPeriod.rawValue, forKey: "targetPeriod")
+    public func setTargetPeriod(targetPeriod: Set<String>) {
+        userDefaults.set(targetPeriod, forKey: "targetPeriod")
     }
-    public func getStudyPurpose() -> StudyPurpose? {
-        guard let studyPurposeString = userDefaults.string(forKey: "studyPurpose") else { return nil }
-        return StudyPurpose(rawValue: studyPurposeString)
+    public func getStudyPurpose() -> Set<String>? {
+        guard let studyPurposeSet = userDefaults.object(forKey: "studyPurpose") as? Set<String> else { return nil }
+        return studyPurposeSet
     }
-    public func getStudyStyle() -> StudyStyle? {
-        guard let studyStyleString = userDefaults.string(forKey: "studyStyle") else { return nil }
-        return StudyStyle(rawValue: studyStyleString)
+    public func getStudyStyle() -> Set<String>? {
+        guard let studyStyleSet = userDefaults.object(forKey: "studyStyle") as? Set<String> else { return nil }
+        return studyStyleSet
     }
-    public func getTargetPeriod() -> TargetPeriod? {
-        guard let targetPeriodString = userDefaults.string(forKey: "targetPeriod") else { return nil }
-        return TargetPeriod(rawValue: targetPeriodString)
+    public func getTargetPeriod() -> Set<String>? {
+        guard let targetPeriodSet = userDefaults.object(forKey: "targetPeriod") as? Set<String> else { return nil }
+        return targetPeriodSet
     }
 }
