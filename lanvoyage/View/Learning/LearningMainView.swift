@@ -7,53 +7,24 @@
 
 import SwiftUI
 
-enum Level: String, CaseIterable, Identifiable {
-    case beginner = "Beginner"
-    case intermediate = "Intermediate"
-    case advanced = "Advanced"
-    var id: String { rawValue }
-}
-
 struct LearningMainView: View {
-    @State private var selectedLevel: Level = .beginner
 
     var body: some View {
         VStack(alignment: .center, spacing: 12) {
             Text("Learn")
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(Color.fromHex("#121417"))
-                .padding(.horizontal, 20)
                 .padding(.top, 20)
 
-            Picker("Level", selection: $selectedLevel) {
-                ForEach(Level.allCases) { level in
-                    Text(level.rawValue).tag(level)
-                }
-            }
-            .pickerStyle(.segmented)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 4)
-            .background(RoundedRectangle(cornerRadius: 12).fill(Color.white))
-            .padding(.horizontal, 20)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("카테고리")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundColor(Color.fromHex("#121417"))
+                        .padding(.top, 16)
 
-            Group {
-                switch selectedLevel {
-                case .beginner:
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("카테고리")
-                                .font(.system(size: 22, weight: .bold))
-                                .foregroundColor(Color.fromHex("#121417"))
-                                .padding(.horizontal, 20)
-                                .padding(.top, 16)
-
-                            BeginnerSectionView()
-                                .padding(.horizontal, 20)
-                                .padding(.top, 8)
-                        }
-                    }
-                case .intermediate, .advanced:
-                    EmptyView()
+                    LearningSectionsView()
+                        .padding(.top, 8)
                 }
             }
 
@@ -63,7 +34,7 @@ struct LearningMainView: View {
     }
 }
 
-private struct BeginnerSectionView: View {
+private struct LearningSectionsView: View {
     private let sections: [(String, String, String)] = [
         ("Translation Challenges", "Mastering Nuances", "Learn to navigate complex linguistic scenarios and cultural subtleties in translations."),
         ("Quick Response Speaking", "Instant Communication", "Enhance your ability to respond swiftly and effectively in real-time conversations."),

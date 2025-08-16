@@ -132,6 +132,11 @@ class AudioRecorderManager: NSObject, AVAudioPlayerDelegate, AVAudioRecorderDele
             print("Error playing audio: \(error)")
         }
     }
+
+    func stopAudio() {
+        audioPlayer?.pause()
+    }
+
     func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
         print("audioPlayerDecodeErrorDidOccur: \(String(describing: error))")
     }
