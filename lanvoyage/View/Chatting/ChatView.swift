@@ -220,13 +220,14 @@ struct ChatView: View {
     }
 
     private func saveSummaryAndClose() {
-        summarizing = true
-        Task {
-            let joined = messages.suffix(12).map { m in
-                (m.role == .user ? "학생: " : "AI: ") + m.text.replacingOccurrences(of: "\n", with: " ")
-            }.joined(separator: "\n")
-
-            let prompt = """
+        if !summarizing {
+            summarizing = true
+            Task {
+                let joined = messages.suffix(12).map { m in
+                    (m.role == .user ? "학생: " : "AI: ") + m.text.replacingOccurrences(of: "\n", with: " ")
+                }.joined(separator: "\n")
+                
+                let prompt = """
             대화를 카드로 요약하라.
             title: 대화 주제(최대 12자)
             keyword: 발음 교정/문법/문맥 이해/시사 영어/비즈니스/발표/에세이/어휘/리스닝/학습 중 하나
@@ -234,42 +235,45 @@ struct ChatView: View {
             대화:
             \(joined)
             """
-
-            var title = "AI 영어 학습"
-            var keyword = "학습"
-            var details = "표현 3개 만들기"
-
-            do {
-                let res = try await summaryModel.generateContent(prompt)
-                if let text = res.text, let data = text.data(using: .utf8) {
-                    if let parsed = try? JSONDecoder().decode(CardJSON.self, from: data) {
-                        title   = limit(parsed.title,   to: 12)
-                        keyword = parsed.keyword
-                        details = sanitizeTo16(parsed.details)
+                
+                var title = "AI 영어 학습"
+                var keyword = "학습"
+                var details = "표현 3개 만들기"
+                
+                do {
+                    let res = try await summaryModel.generateContent(prompt)
+                    if let text = res.text, let data = text.data(using: .utf8) {
+                        if let parsed = try? JSONDecoder().decode(CardJSON.self, from: data) {
+                            title   = limit(parsed.title,   to: 12)
+                            keyword = parsed.keyword
+                            details = sanitizeTo16(parsed.details)
+                        }
                     }
+                } catch {
+                    let lastAsk = messages.last(where: { $0.role == .user })?.text ?? ""
+                    let cat = heuristicCategory(from: lastAsk)
+                    title   = limit(cat.title,   to: 12)
+                    keyword = cat.keyword
+                    details = "표현 3개 만들기"
                 }
-            } catch {
-                let lastAsk = messages.last(where: { $0.role == .user })?.text ?? ""
-                let cat = heuristicCategory(from: lastAsk)
-                title   = limit(cat.title,   to: 12)
-                keyword = cat.keyword
-                details = "표현 3개 만들기"
+                
+                let summary = ChatSummary(
+                    id: UUID().uuidString,
+                    title: title,
+                    snippet: details,
+                    timestamp: Date(),
+                    topic: keyword,
+                    messageCount: messages.count
+                )
+                ChatStore.append(summary)
+                
+                summarizing = false
+                withAnimation(.spring(response: 0.36, dampingFraction: 0.9, blendDuration: 0.2)) {
+                    onClose()
+                }
             }
-
-            let summary = ChatSummary(
-                id: UUID().uuidString,
-                title: title,
-                snippet: details,
-                timestamp: Date(),
-                topic: keyword,
-                messageCount: messages.count
-            )
-            ChatStore.append(summary)
-
-            summarizing = false
-            withAnimation(.spring(response: 0.36, dampingFraction: 0.9, blendDuration: 0.2)) {
-                onClose()
-            }
+        } else {
+            print("Already called saveSummaryAndClose(). Abort.")
         }
     }
 
