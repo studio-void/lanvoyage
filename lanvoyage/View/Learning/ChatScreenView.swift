@@ -16,6 +16,7 @@ struct ChatScenario {
     var headerSubtitle: String
     var systemPrompt: String
     var initialBotMessage: String
+    /// onSave is a hook for external handling, but does NOT save to ChatHistoryStore directly
     var onSave: (ChatSummary, [ChatScreenView.ChatMessage]) -> Void = { s, _ in
         ChatStore.append(s)
     }
@@ -103,7 +104,6 @@ struct ChatScreenView: View {
     var durationSeconds3: Int { Int(Date().timeIntervalSince(sessionStart)) }
     var pointsToAddMode3: Int { max(0, min(100, score3)) / 10 + (durationSeconds3 / 1800) }
 
-    // Convert recent messages into [ModelContent] so the model can remember context
     private func contentsFromMessages(limit: Int) -> [ModelContent] {
         let recent = messages.suffix(limit)
         return recent.map { m in
@@ -201,7 +201,6 @@ struct ChatScreenView: View {
         }
     }
 
-    // Markdown-enabled bubbles for both user & bot
     private func bubble(_ text: String, isUser: Bool) -> some View {
         Markdown(text)
             .font(.body)
@@ -261,7 +260,6 @@ struct ChatScreenView: View {
 
         Task {
             do {
-                // Use conversation history so the model remembers prior turns
                 let history = contentsFromMessages(limit: maxHistoryTurns)
                 let request = history + [ModelContent(role: "user", parts: [text])]
                 for try await chunk in try chatModel.generateContentStream(request) {
@@ -278,7 +276,7 @@ struct ChatScreenView: View {
                     bot.text = res.text ?? "(no response)"
                     messages[botIndex] = bot
                 } catch {
-                    messages[botIndex].text = "오류: \(error.localizedDescription)"
+                    messages[botIndex].text = "오류: \\(error.localizedDescription)"
                 }
             }
             busy = false
@@ -290,7 +288,7 @@ struct ChatScreenView: View {
         let finalBody = extractFinalEssay(from: lastBot).trimmingCharacters(in: .whitespacesAndNewlines)
         guard finalBody.isEmpty == false else { return }
 
-        let firstLine = finalBody.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: true).first ?? Substring("Essay")
+        let firstLine = finalBody.split(separator: "\\n", maxSplits: 1, omittingEmptySubsequences: true).first ?? Substring("Essay")
         let title = String(firstLine.prefix(24))
         let snippet = String(finalBody.prefix(60))
 
@@ -322,6 +320,7 @@ struct ChatScreenView: View {
 
             userPointsManager.addPoints(pointsToAddMode3)
 
+            // Call scenario hook but do NOT re-append to ChatHistoryStore here
             scenario.onSave(summary, messages)
             savingFinal = false
             showSavedAlert = true
@@ -334,7 +333,7 @@ struct ChatScreenView: View {
         기준: 논지명료성(25) 구조/전개(25) 근거/예시(20) 문장력/문법(20) 결론/시사점(10).
         JSON만 반환: {"score": <정수 0..100>, "reason": "<80자 이내 근거 요약>"}.
         글:
-        \(text)
+        \\(text)
         """
         do {
             let res = try await scoringModel.generateContent(rubric)
@@ -372,8 +371,7 @@ enum Scenarios {
         모호하면 2~3개의 명확 질문으로 요구사항을 좁혀라.
         """,
         initialBotMessage: "에세이 주제/키워드를 알려주면 구조부터 같이 잡아볼게요.",
-        onSave: { summary, _ in
-            ChatHistoryStore.append(summary)
+        onSave: { _, _ in
         }
     )
 
@@ -384,8 +382,7 @@ enum Scenarios {
         변경 이유를 간단히 설명한다.
         """,
         initialBotMessage: "형식(APA/MLA)과 출처 정보를 알려주면 인용 예시를 만들어줄게요.",
-        onSave: { summary, _ in
-            ChatHistoryStore.append(summary)
+        onSave: { _, _ in
         }
     )
 }
@@ -395,4 +392,3 @@ enum Scenarios {
         ChatScreenView(scenario: Scenarios.essay, autoFocus: false)
     }
 }
-
