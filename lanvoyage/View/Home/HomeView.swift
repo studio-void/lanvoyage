@@ -50,15 +50,17 @@ struct HomeView: View {
                             image: Image("aiLearning"),
                             title: "Quick Response Challenge",
                             description:
-                                "상황에 맞는 질의응답을 통해 언어 실력을 향상시켜 보세요!"
+                                "상황에 맞는 질의응답을 통해 언어 실력과 순발력을 향상시켜 보세요!"
                         )
                     }
-                    RecommendedLearningCardView(
-                        image: Image("learningEnglish"),
-                        title: "AI in Everyday Life",
-                        description:
-                            "Explore how AI is integrated into daily routines and its impact."
-                    )
+                    NavigationLink(destination: TranslationChallengeView().navigationBarBackButtonHidden()) {
+                        RecommendedLearningCardView(
+                            image: Image("learningEnglish"),
+                            title: "Translation Challenge",
+                            description:
+                                "주어진 상황에 맞는 대답을 영작한 후, 발음까지 테스트해 보세요!"
+                        )
+                    }
                     RecommendedLearningCardView(
                         image: Image("aiToolsExploration"),
                         title: "AI Tools Exploration",
