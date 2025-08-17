@@ -14,6 +14,7 @@ struct ChooseStudyStyleView: View {
     @State private var selectedStyles: Set<String> = []
     @State var targetPeriod: TargetPeriod?
     @State private var selectedPeriod: Set<String> = []
+    @AppStorage("userName") var userName: String = ""
     @Environment(\.presentationMode) var presentationMode
 
     private let columns: [GridItem] = [
@@ -105,6 +106,17 @@ struct ChooseStudyStyleView: View {
             .onChange(of: selectedPeriod) {
                 studyStyleManager.setTargetPeriod(targetPeriod: selectedPeriod)
             }
+            .padding(.bottom)
+            HStack{
+                Text("닉네임 설정")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Spacer()
+            }
+            TextField("닉네임을 입력해 주세요.", text: $userName)
+                .padding()
+                .background(Color.gray100)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
             Spacer()
             GeometryReader { proxy in
                 let spacing: CGFloat = 12

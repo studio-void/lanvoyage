@@ -13,6 +13,7 @@ struct HomeView: View {
         GridItem(.flexible(), spacing: 16),
         GridItem(.flexible(), spacing: 16),
     ]
+    @AppStorage("userName") var userName: String = "GIST"
 
     var body: some View {
         NavigationView{
@@ -26,7 +27,7 @@ struct HomeView: View {
                 //            }
                 //            .padding(.bottom)
                 HStack {
-                    Text("GIST님, 환영합니다!")
+                    Text("\(userName)님, 환영합니다!")
                         .font(.title)
                         .fontWeight(.bold)
                     Spacer()
