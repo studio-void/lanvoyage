@@ -7,6 +7,7 @@
 
 import SwiftUI
 import VoidUtilities
+import AlertToast
 
 struct TranslationChallengeView: View {
     @Environment(\.presentationMode) var presentationMode
@@ -29,6 +30,8 @@ struct TranslationChallengeView: View {
     @State var audioPoint: Int?
     @State var audioFeedback: String?
     @State var pointsAwardedForThisAttempt = false
+    @State var showToast = false
+    @State var awardedPoints = 0
     @State var currentStep = 1
     var body: some View {
         ScrollView {
@@ -275,6 +278,8 @@ struct TranslationChallengeView: View {
                                                 pointsToAdd
                                             )
                                             pointsAwardedForThisAttempt = true
+                                            awardedPoints = pointsToAdd
+                                            showToast = true
                                         }
                                         totalGradingDone = true
                                     }
@@ -384,6 +389,11 @@ struct TranslationChallengeView: View {
                     }
                 }
             }
+        }
+        .toast(isPresenting: $showToast, duration: 5, tapToDismiss: true) {
+            AlertToast(displayMode: .hud, type: .systemImage("p.circle.fill", Color.violet500), title: "+\(awardedPoints) XP", subTitle: "XP Granted")
+        } completion: {
+            showToast = false
         }
     }
 }
