@@ -16,7 +16,6 @@ struct ChatScenario {
     var headerSubtitle: String
     var systemPrompt: String
     var initialBotMessage: String
-    /// onSave is just a hook for external handling (NOT saving to ChatHistoryStore directly)
     var onSave: (ChatSummary, [ChatScreenView.ChatMessage]) -> Void = { s, _ in
         ChatStore.append(s)
     }
@@ -110,6 +109,8 @@ struct ChatScreenView: View {
     @State private var savingFinal = false
     @State private var showSavedAlert = false
     @State private var sessionStart = Date()
+    @State private var showToast = false
+    @State private var toastMessage: String = ""
 
     private let maxHistoryTurns = 24
 
@@ -147,7 +148,6 @@ struct ChatScreenView: View {
         return raw.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    // MARK: - UI
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
@@ -210,9 +210,33 @@ struct ChatScreenView: View {
         } message: {
             Text("History에서 최종본을 확인할 수 있어요.")
         }
+        .overlay(alignment: .top) {
+            if showToast {
+                VStack {
+                    Text(toastMessage)
+                        .font(.subheadline.weight(.semibold))
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.black.opacity(0.85))
+                        )
+                        .padding(.top, 60)
+                        .shadow(radius: 8)
+                    Spacer()
+                }
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                        withAnimation { showToast = false }
+                    }
+                }
+            }
+        }
     }
 
-    // MARK: - 메시지 UI
     @ViewBuilder
     private func messageRow(_ m: ChatMessage) -> some View {
         if m.role == .user {
@@ -241,7 +265,6 @@ struct ChatScreenView: View {
     private func bubble(_ text: String, isUser: Bool) -> some View {
         Markdown(text)
             .font(.body)
-            .markdownTextStyle { ForegroundColor(isUser ? .white : .primary) }
             .foregroundColor(isUser ? .white : .primary)
             .padding(.vertical, 10)
             .padding(.horizontal, 14)
@@ -257,6 +280,7 @@ struct ChatScreenView: View {
         Circle().fill(Color(.systemGray5)).frame(width: 28, height: 28)
             .overlay(Image(systemName: "person.crop.circle.fill").foregroundColor(.gray))
     }
+
     private var userAvatar: some View {
         Circle().fill(Color.violet200).frame(width: 28, height: 28)
             .overlay(Image(systemName: "person.crop.circle.fill").foregroundColor(.white))
@@ -320,7 +344,6 @@ struct ChatScreenView: View {
         }
     }
 
-    // MARK: - 최종본 저장
     private func saveFinalDocument() {
         guard let lastBot = messages.last(where: { $0.role == .bot })?.text else { return }
         savingFinal = true
@@ -362,6 +385,11 @@ struct ChatScreenView: View {
             scenario.onSave(summary, messages)
             savingFinal = false
             showSavedAlert = true
+
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                toastMessage = " \(pointsToAddMode3) 포인트 획득!\n피드백: \(reason.isEmpty ? "자동 백업 채점" : reason)"
+                showToast = true
+            }
         }
     }
 
