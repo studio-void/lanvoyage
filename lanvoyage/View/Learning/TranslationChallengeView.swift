@@ -8,9 +8,11 @@
 import SwiftUI
 import VoidUtilities
 import AlertToast
+import SwiftData
 
 struct TranslationChallengeView: View {
     @Environment(\.presentationMode) var presentationMode
+    @Environment(\.modelContext) private var modelContext
     @State var studyStyleManager = StudyStyleManager()
     @State var translationChallengeManager = TranslationChallengeManager()
     @State var arManager = AudioRecorderManager()
@@ -31,8 +33,13 @@ struct TranslationChallengeView: View {
     @State var audioFeedback: String?
     @State var pointsAwardedForThisAttempt = false
     @State var showToast = false
-    @State var awardedPoints = 0
     @State var currentStep = 1
+    @State private var startDate1: Date? = nil
+    @State var durationSeconds1: Int = 0
+
+    var score1: Int { (userAnswerPoint ?? 0) + (audioPoint ?? 0) }
+    var pointsToAddMode1: Int { score1 / 18 }
+
     var body: some View {
         ScrollView {
             VStack {
@@ -42,8 +49,7 @@ struct TranslationChallengeView: View {
                         .fontWeight(.bold)
                         .fontDesign(.rounded)
                     Spacer()
-                    Button(action: { presentationMode.wrappedValue.dismiss() })
-                    {
+                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Image(systemName: "xmark")
                     }
                 }
@@ -54,7 +60,7 @@ struct TranslationChallengeView: View {
                     Spacer()
                 }
                 .padding(.bottom)
-                // MARK: - Step 1
+
                 if currentStep >= 1 {
                     HStack {
                         Text("Step 1")
@@ -64,41 +70,28 @@ struct TranslationChallengeView: View {
                     .fontWeight(.semibold)
                     .padding(.bottom, 4)
                     HStack {
-                        Text(
-                            "나의 역할인 \(studyStyleManager.chooseRole().rawValue)에 맞는 상황을 생성하세요."
-                        )
+                        Text("나의 역할인 \(studyStyleManager.chooseRole().rawValue)에 맞는 상황을 생성하세요.")
                         Spacer()
                     }
                     .font(.callout)
                     .foregroundStyle(Color.gray700)
                     .padding(.bottom, 8)
                     Button(action: {
-                        withAnimation {
-                            isGeneratingSituation = true
-                        }
+                        withAnimation { isGeneratingSituation = true }
                         Task {
                             do {
-                                translationChallengeSituation =
-                                    try await translationChallengeManager
-                                    .getSituation(
-                                        role: studyStyleManager.chooseRole()
-                                    )
-                                withAnimation {
-                                    currentStep += 1
-                                }
+                                translationChallengeSituation = try await translationChallengeManager.getSituation(role: studyStyleManager.chooseRole())
+                                startDate1 = Date()
+                                withAnimation { currentStep += 1 }
                             } catch {
-                                // Handle the error appropriately (for now, we'll just print it)
                                 print("Failed to get situation: \(error)")
                             }
-                            withAnimation {
-                                isGeneratingSituation = false
-                            }
+                            withAnimation { isGeneratingSituation = false }
                         }
                     }) {
                         CustomButtonView(
                             title: "상황 생성하기",
-                            kind: (isGeneratingSituation || currentStep != 1)
-                                ? .disabled : .filled
+                            kind: (isGeneratingSituation || currentStep != 1) ? .disabled : .filled
                         )
                     }
                     .disabled(isGeneratingSituation || currentStep != 1)
@@ -110,7 +103,7 @@ struct TranslationChallengeView: View {
                         }
                     }
                 }
-                // MARK: - Step 2
+
                 if currentStep >= 2 && translationChallengeSituation != nil {
                     HStack {
                         Text("Step 2")
@@ -120,9 +113,7 @@ struct TranslationChallengeView: View {
                     .fontWeight(.semibold)
                     .padding(.bottom, 4)
                     HStack {
-                        Text(
-                            "주어진 상황에 맞는 문장을 뉘앙스를 고려하여 영작하세요."
-                        )
+                        Text("주어진 상황에 맞는 문장을 뉘앙스를 고려하여 영작하세요.")
                         Spacer()
                     }
                     .font(.callout)
@@ -136,9 +127,7 @@ struct TranslationChallengeView: View {
                         }
                         .padding(.bottom, 4)
                         HStack {
-                            Text(
-                                translationChallengeSituation!.questionSentence
-                            )
+                            Text(translationChallengeSituation!.questionSentence)
                             Spacer()
                         }
                     }
@@ -151,33 +140,24 @@ struct TranslationChallengeView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                         .padding(.bottom)
                     Button(action: {
-                        withAnimation {
-                            isGradingUserAnswer = true
-                        }
+                        withAnimation { isGradingUserAnswer = true }
                         Task {
                             do {
                                 (userAnswerPoint, userAnswerFeedback) =
-                                    try await translationChallengeManager
-                                    .gradeTranslation(
+                                    try await translationChallengeManager.gradeTranslation(
                                         userAnswer,
                                         translationChallengeSituation!
                                     )
-                                withAnimation {
-                                    currentStep += 1
-                                }
+                                withAnimation { currentStep += 1 }
                             } catch {
-                                // Handle the error appropriately (for now, we'll just print it)
                                 print("Failed to get situation: \(error)")
                             }
-                            withAnimation {
-                                isGradingUserAnswer = false
-                            }
+                            withAnimation { isGradingUserAnswer = false }
                         }
                     }) {
                         CustomButtonView(
                             title: "영작 제출하기",
-                            kind: (isGradingUserAnswer || currentStep != 2)
-                                ? .disabled : .filled
+                            kind: (isGradingUserAnswer || currentStep != 2) ? .disabled : .filled
                         )
                     }
                     .disabled(isGradingUserAnswer || currentStep != 2)
@@ -187,13 +167,10 @@ struct TranslationChallengeView: View {
                             ProgressView()
                             Text("영작을 채점하고 있어요. 잠시만 기다려 주세요...")
                         }
-                    } else {
                     }
                 }
-                // MARK: - Step 3
-                if currentStep >= 3 && translationChallengeSituation != nil
-                    && userAnswerPoint != nil
-                {
+
+                if currentStep >= 3 && translationChallengeSituation != nil && userAnswerPoint != nil {
                     HStack {
                         Text("Step 3")
                         Spacer()
@@ -202,9 +179,7 @@ struct TranslationChallengeView: View {
                     .fontWeight(.semibold)
                     .padding(.bottom, 4)
                     HStack {
-                        Text(
-                            "Step 2에서 대답한 '\(userAnswer)'을 직접 발음해 보세요."
-                        )
+                        Text("Step 2에서 대답한 '\(userAnswer)'을 직접 발음해 보세요.")
                         Spacer()
                     }
                     .font(.callout)
@@ -215,9 +190,7 @@ struct TranslationChallengeView: View {
                             if !isRecording {
                                 let id = translationChallengeSituation!.id
                                 resultPath = arManager.recordAudio(uuid: id)
-                                print(
-                                    "trying to save speaking audio data to path: \(resultPath)"
-                                )
+                                print("trying to save speaking audio data to path: \(resultPath)")
                                 isRecording = true
                             } else {
                                 arManager.stopRecording()
@@ -230,23 +203,25 @@ struct TranslationChallengeView: View {
                                 }
                                 Task {
                                     let id = translationChallengeSituation!.id
-                                    let result =
-                                        try await translationChallengeManager
-                                        .gradeAudio(userAnswer, id)
+                                    let result = try await translationChallengeManager.gradeAudio(userAnswer, id)
                                     await MainActor.run {
                                         audioPoint = result.score
                                         audioFeedback = result.description
                                         if !pointsAwardedForThisAttempt {
-                                            let audioScore = result.score
-                                            let pointsToAdd =
-                                                (audioScore + userAnswerPoint!)
-                                                / 18
-                                            userPointsManager.addPoints(
-                                                pointsToAdd
-                                            )
+                                            if let start = startDate1 {
+                                                durationSeconds1 = Int(Date().timeIntervalSince(start))
+                                                                                        }
+                                            userPointsManager.addPoints(pointsToAddMode1)
                                             pointsAwardedForThisAttempt = true
-                                            awardedPoints = pointsToAdd
                                             showToast = true
+                                            
+                                            StudyRecordManager.add(
+                                                    context: modelContext,
+                                                    mode: .mode1,
+                                                    score: score1,
+                                                    durationSeconds: durationSeconds1,
+                                                    points: pointsToAddMode1
+                                                )
                                         }
                                         totalGradingDone = true
                                     }
@@ -254,46 +229,7 @@ struct TranslationChallengeView: View {
                                 }
                             }
                         }) {
-                            Image(
-                                systemName: isRecording
-                                    ? "stop.circle.fill"
-                                    : "microphone.circle.fill"
-                            )
-                            .font(.system(size: 96))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [Color.pink500, Color.blue500],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                        }
-                        .disabled(isGradingAudio)
-                        if recordDone {
-                            Button(action: {
-                                if !isPlaying {
-                                    if let url = URL(string: resultPath),
-                                        url.isFileURL
-                                    {
-                                        arManager.playAudio(url: url)
-                                    } else {
-                                        arManager.playAudio(
-                                            url: URL(
-                                                fileURLWithPath: resultPath
-                                            )
-                                        )
-                                    }
-                                    isPlaying = true
-                                } else {
-                                    arManager.stopAudio()
-                                    isPlaying = false
-                                }
-                            }) {
-                                Image(
-                                    systemName: isPlaying
-                                        ? "stop.circle.fill"
-                                        : "play.circle.fill"
-                                )
+                            Image(systemName: isRecording ? "stop.circle.fill" : "microphone.circle.fill")
                                 .font(.system(size: 96))
                                 .foregroundStyle(
                                     LinearGradient(
@@ -302,6 +238,31 @@ struct TranslationChallengeView: View {
                                         endPoint: .bottomTrailing
                                     )
                                 )
+                        }
+                        .disabled(isGradingAudio)
+                        if recordDone {
+                            Button(action: {
+                                if !isPlaying {
+                                    if let url = URL(string: resultPath), url.isFileURL {
+                                        arManager.playAudio(url: url)
+                                    } else {
+                                        arManager.playAudio(url: URL(fileURLWithPath: resultPath))
+                                    }
+                                    isPlaying = true
+                                } else {
+                                    arManager.stopAudio()
+                                    isPlaying = false
+                                }
+                            }) {
+                                Image(systemName: isPlaying ? "stop.circle.fill" : "play.circle.fill")
+                                    .font(.system(size: 96))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [Color.pink500, Color.blue500],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
                             }
                         }
                     }
@@ -311,14 +272,10 @@ struct TranslationChallengeView: View {
                             Text("발음를 채점하고 있어요. 잠시만 기다려 주세요...")
                         }
                     }
-                    if totalGradingDone && userAnswerPoint != nil
-                        && audioPoint != nil
-                    {
+                    if totalGradingDone && userAnswerPoint != nil && audioPoint != nil {
                         VStack {
                             HStack {
-                                Text(
-                                    "영작: \(userAnswerPoint!)점"
-                                )
+                                Text("영작: \(userAnswerPoint!)점")
                                 Spacer()
                             }
                             .font(.headline)
@@ -326,9 +283,7 @@ struct TranslationChallengeView: View {
                             .fontWeight(.semibold)
                             .padding(.bottom, 4)
                             HStack {
-                                Text(
-                                    "발음: \(audioPoint!)점"
-                                )
+                                Text("발음: \(audioPoint!)점")
                                 Spacer()
                             }
                             .font(.headline)
@@ -336,9 +291,7 @@ struct TranslationChallengeView: View {
                             .fontWeight(.semibold)
                             .padding(.bottom, 8)
                             HStack {
-                                Text(
-                                    "\(userAnswerFeedback!)\n\(audioFeedback!)"
-                                )
+                                Text("\(userAnswerFeedback!)\n\(audioFeedback!)")
                                 Spacer()
                             }
                         }
@@ -350,7 +303,7 @@ struct TranslationChallengeView: View {
                             currentStep = 1
                             userAnswer = ""
                             recordDone = false
-                        }){
+                        }) {
                             CustomButtonView(title: "다시하기", kind: .outline)
                         }
                     }
@@ -358,7 +311,7 @@ struct TranslationChallengeView: View {
             }
         }
         .toast(isPresenting: $showToast, duration: 5, tapToDismiss: true) {
-            AlertToast(displayMode: .hud, type: .systemImage("p.circle.fill", Color.violet500), title: "+\(awardedPoints) XP", subTitle: "XP Granted")
+            AlertToast(displayMode: .hud, type: .systemImage("p.circle.fill", Color.violet500), title: "+\(pointsToAddMode1) XP", subTitle: "XP Granted")
         } completion: {
             showToast = false
         }

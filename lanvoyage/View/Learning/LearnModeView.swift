@@ -49,7 +49,7 @@ struct LearnModeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("AI, 생산성의 비밀 무기")
+                    Text("AI, 나의 든든한 조력자")
                         .font(.title2).bold()
 
                     Text("AI, 이제는 제대로 알고 200% 활용하자!")

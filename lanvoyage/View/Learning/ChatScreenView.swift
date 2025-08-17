@@ -8,6 +8,7 @@
 import SwiftUI
 import VoidUtilities
 import FirebaseAI
+import SwiftData
 
 struct ChatScenario {
     var headerTitle: String = "AI Tool Master"
@@ -27,12 +28,15 @@ struct ChatScreenView: View {
         var text: String
     }
 
+    @Environment(\.modelContext) private var modelContext
+    @State private var userPointsManager = UserPointsManager()
+
     var scenario: ChatScenario
     var onClose: () -> Void = {}
     var autoFocus: Bool = true
 
     private let chatModel: GenerativeModel
-    private let summaryModel: GenerativeModel
+    private let scoringModel: GenerativeModel
 
     init(autoFocus: Bool = true, onClose: @escaping () -> Void = {}) {
         self.init(
@@ -68,21 +72,17 @@ struct ChatScreenView: View {
             systemInstruction: systemPrompt
         )
 
-        let jsonSchema = Schema.object(
+        let scoreSchema = Schema.object(
             properties: [
-                "title": .string(description: "대화 주제, 최대 12자"),
-                "keyword": .enumeration(values: [
-                    "발음 교정","문법","문맥 이해","시사 영어","비즈니스","발표","에세이","어휘","리스닝","학습"
-                ]),
-                "details": .string(description: "실행할 해결책, 최대 16자, 말줄임표 금지")
+                "score": .integer(description: "0~100 사이의 정수 점수"),
+                "reason": .string(description: "점수 근거 요약, 최대 80자")
             ]
         )
-
-        self.summaryModel = ai.generativeModel(
+        self.scoringModel = ai.generativeModel(
             modelName: "gemini-2.5-flash",
             generationConfig: GenerationConfig(
                 responseMIMEType: "application/json",
-                responseSchema: jsonSchema
+                responseSchema: scoreSchema
             )
         )
     }
@@ -91,7 +91,15 @@ struct ChatScreenView: View {
     @State private var input: String = ""
     @FocusState private var focused: Bool
     @State private var busy = false
-    @State private var summarizing = false
+    @State private var savingFinal = false
+    @State private var showSavedAlert = false
+    @State private var sessionStart = Date()
+
+    private let maxContextTurns = 10
+
+    @State private var score3: Int = 0
+    var durationSeconds3: Int { Int(Date().timeIntervalSince(sessionStart)) }
+    var pointsToAddMode3: Int { max(0, min(100, score3)) / 10 + (durationSeconds3 / 1800) }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -99,9 +107,6 @@ struct ChatScreenView: View {
                 LazyVStack(spacing: 20) {
                     ForEach(messages) { m in
                         messageRow(m).id(m.id)
-                    }
-                    if summarizing {
-                        ProgressView().padding(.top, 8)
                     }
                 }
                 .padding(.vertical, 16)
@@ -115,6 +120,7 @@ struct ChatScreenView: View {
             .onAppear {
                 if messages.isEmpty {
                     messages = [.init(role: .bot, text: scenario.initialBotMessage)]
+                    sessionStart = Date()
                 }
                 if autoFocus { focused = true }
                 if let last = messages.last?.id { proxy.scrollTo(last, anchor: .bottom) }
@@ -138,10 +144,26 @@ struct ChatScreenView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: saveFinalDocument) {
+                    Text("최종본 생성")
+                        .font(.system(size: 13, weight: .semibold))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.violet500))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+                .disabled(savingFinal)
+            }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .alert("저장 완료", isPresented: $showSavedAlert) {
+            Button("확인", role: .cancel) { }
+        } message: {
+            Text("History에서 최종본을 확인할 수 있어요.")
+        }
     }
-
 
     @ViewBuilder
     private func messageRow(_ m: ChatMessage) -> some View {
@@ -191,7 +213,6 @@ struct ChatScreenView: View {
             .overlay(Image(systemName: "person.crop.circle.fill").foregroundColor(.white))
     }
 
-
     private var inputBar: some View {
         HStack(spacing: 12) {
             TextField("AI 멘토와 대화해보세요.", text: $input, axis: .vertical)
@@ -213,20 +234,23 @@ struct ChatScreenView: View {
         .background(Color(.systemBackground).opacity(0.98))
     }
 
-
     private func send() {
         let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, busy == false else { return }
+
         messages.append(.init(role: .user, text: text))
         input = ""
+
         var bot = ChatMessage(role: .bot, text: "")
         messages.append(bot)
         let botIndex = messages.count - 1
         busy = true
 
+        let prompt = contextPrompt(text)
+
         Task {
             do {
-                for try await chunk in try chatModel.generateContentStream(text) {
+                for try await chunk in try chatModel.generateContentStream(prompt) {
                     if let t = chunk.text, !t.isEmpty {
                         bot.text += t
                         messages[botIndex] = bot
@@ -234,7 +258,7 @@ struct ChatScreenView: View {
                 }
             } catch {
                 do {
-                    let res = try await chatModel.generateContent(text)
+                    let res = try await chatModel.generateContent(prompt)
                     bot.text = res.text ?? "(no response)"
                     messages[botIndex] = bot
                 } catch {
@@ -245,123 +269,96 @@ struct ChatScreenView: View {
         }
     }
 
-    private func saveSummaryAndClose() {
-        summarizing = true
+    private func contextPrompt(_ latestUserText: String) -> String {
+        let rows = messages.map { m -> String in
+            m.role == .user ? "학생: \(m.text.replacingOccurrences(of: "\n", with: " "))"
+                            : "AI: \(m.text.replacingOccurrences(of: "\n", with: " "))"
+        }
+        let tail = Array(rows.suffix(maxContextTurns * 2))
+        let joined = tail.joined(separator: "\n")
+        let system = """
+        역할: \(scenario.systemPrompt)
+        지침: 대화 맥락을 유지하고, 불명확하면 2~3개의 질문으로 요구사항을 좁힌다.
+        """
+        return [system, joined, "학생: \(latestUserText)", "AI:"].joined(separator: "\n")
+    }
+
+    private func saveFinalDocument() {
+        guard let lastBot = messages.last(where: { $0.role == .bot })?.text else { return }
+        let finalBody = extractFinalEssay(from: lastBot).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard finalBody.isEmpty == false else { return }
+
+        let firstLine = finalBody.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: true).first ?? Substring("Essay")
+        let title = String(firstLine.prefix(24))
+        let snippet = String(finalBody.prefix(60))
+
+        let summary = ChatSummary(
+            id: UUID().uuidString,
+            title: title,
+            snippet: snippet,
+            timestamp: Date(),
+            topic: scenario.headerSubtitle,
+            messageCount: messages.count
+        )
+
+        savingFinal = true
         Task {
-            let joined = messages.suffix(12).map { m in
-                (m.role == .user ? "학생: " : "AI: ") + m.text.replacingOccurrences(of: "\n", with: " ")
-            }.joined(separator: "\n")
+            let (scored, reason) = await scoreFinalEssay(finalBody)
+            score3 = scored
 
-            let prompt = """
-            대화를 카드로 요약하라.
-            title: 대화 주제(최대 12자)
-            keyword: 발음 교정/문법/문맥 이해/시사 영어/비즈니스/발표/에세이/어휘/리스닝/학습 중 하나
-            details: 실행할 해결책 한 문장(최대 16자, 말줄임표 금지)
-            대화:
-            \(joined)
-            """
+            ChatHistoryStore.append(summary: summary, fullText: finalBody)
+            ChatHistoryStore.setDuration(for: summary.id, seconds: durationSeconds3)
+            ChatHistoryStore.setScore(for: summary.id, score: scored, reason: reason)
 
-            var title = "AI 영어 학습"
-            var keyword = "학습"
-            var details = "표현 3개 만들기"
-
-            do {
-                let res = try await summaryModel.generateContent(prompt)
-                if let text = res.text, let data = text.data(using: .utf8) {
-                    if let parsed = try? JSONDecoder().decode(CardJSON.self, from: data) {
-                        title   = limit(parsed.title,   to: 12)
-                        keyword = parsed.keyword
-                        details = sanitizeTo16(parsed.details)
-                    }
-                }
-            } catch {
-                let lastAsk = messages.last(where: { $0.role == .user })?.text ?? ""
-                let cat = heuristicCategory(from: lastAsk)
-                title   = limit(cat.title,   to: 12)
-                keyword = cat.keyword
-                details = "표현 3개 만들기"
-            }
-
-            let summary = ChatSummary(
-                id: UUID().uuidString,
-                title: title,
-                snippet: details,
-                timestamp: Date(),
-                topic: keyword,
-                messageCount: messages.count
+            StudyRecordManager.add(
+                context: modelContext,
+                mode: .mode3,
+                score: score3,
+                durationSeconds: durationSeconds3,
+                points: pointsToAddMode3
             )
 
+            userPointsManager.addPoints(pointsToAddMode3)
+
             scenario.onSave(summary, messages)
-
-            summarizing = false
-            withAnimation(.spring(response: 0.36, dampingFraction: 0.9, blendDuration: 0.2)) {
-                onClose()
-            }
+            savingFinal = false
+            showSavedAlert = true
         }
     }
 
-
-    private func limit(_ s: String, to max: Int) -> String {
-        if s.count <= max { return s }
-        return String(s.prefix(max))
+    private func scoreFinalEssay(_ text: String) async -> (Int, String) {
+        let rubric = """
+        아래 글을 0~100점으로 채점하라.
+        기준: 논지명료성(25) 구조/전개(25) 근거/예시(20) 문장력/문법(20) 결론/시사점(10).
+        JSON만 반환: {"score": <정수 0..100>, "reason": "<80자 이내 근거 요약>"}.
+        글:
+        \(text)
+        """
+        do {
+            let res = try await scoringModel.generateContent(rubric)
+            if let t = res.text, let data = t.data(using: .utf8) {
+                struct ScoreJSON: Decodable { let score: Int; let reason: String? }
+                if let parsed = try? JSONDecoder().decode(ScoreJSON.self, from: data) {
+                    let s = max(0, min(100, parsed.score))
+                    return (s, parsed.reason ?? "")
+                }
+            }
+        } catch { }
+        let wc = max(0, text.split { $0.isWhitespace || $0.isNewline }.count)
+        let fallback = max(40, min(95, 50 + wc/20))
+        return (fallback, "자동 백업 채점")
     }
 
-    private func sanitizeTo16(_ raw: String) -> String {
-        var t = raw
-            .replacingOccurrences(of: "...", with: "")
-            .replacingOccurrences(of: "…", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        if t.count > 16 { t = String(t.prefix(16)) }
-        let badEnds: [Character] = [",","·","-","—",":",";"]
-        while let last = t.last, badEnds.contains(last) { t.removeLast() }
+    private func extractFinalEssay(from raw: String) -> String {
+        let t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let r1 = t.range(of: "```"), let r2 = t.range(of: "```", range: r1.upperBound..<t.endIndex) {
+            return String(t[r1.upperBound..<r2.lowerBound])
+        }
+        if let r = t.range(of: "최종본") ?? t.range(of: "Final") ?? t.range(of: "final", options: .caseInsensitive) {
+            let after = t[r.upperBound...]
+            return String(after).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
         return t
-    }
-
-    private struct CardJSON: Codable { let title: String; let keyword: String; let details: String }
-
-    private enum HeuCat { case pronunciation, grammar, reading, news, business, presentation, essay, vocabulary, listening, general
-        var title: String {
-            switch self {
-            case .pronunciation: return "스피킹 발음 교정"
-            case .grammar: return "문법 이해"
-            case .reading: return "문맥 이해"
-            case .news: return "시사 영어"
-            case .business: return "비즈니스 영어"
-            case .presentation: return "발표 피드백"
-            case .essay: return "에세이/작문"
-            case .vocabulary: return "어휘 확장"
-            case .listening: return "리스닝 훈련"
-            case .general: return "AI 영어 학습"
-            }
-        }
-        var keyword: String {
-            switch self {
-            case .pronunciation: return "발음 교정"
-            case .grammar: return "문법"
-            case .reading: return "문맥 이해"
-            case .news: return "시사 영어"
-            case .business: return "비즈니스"
-            case .presentation: return "발표"
-            case .essay: return "에세이"
-            case .vocabulary: return "어휘"
-            case .listening: return "리스닝"
-            case .general: return "학습"
-            }
-        }
-    }
-
-    private func heuristicCategory(from text: String) -> HeuCat {
-        let t = text.lowercased()
-        if t.contains("발음") || t.contains("pronunciation") || t.contains("억양") || t.contains("accent") { return .pronunciation }
-        if t.contains("문법") || t.contains("grammar") { return .grammar }
-        if t.contains("독해") || t.contains("reading") || t.contains("comprehension") || t.contains("문맥") { return .reading }
-        if t.contains("뉴스") || t.contains("시사") || t.contains("news") { return .news }
-        if t.contains("비즈니스") || t.contains("business") || t.contains("메일") || t.contains("email") { return .business }
-        if t.contains("발표") || t.contains("presentation") || t.contains("프레젠테이션") { return .presentation }
-        if t.contains("에세이") || t.contains("essay") || t.contains("작문") || t.contains("writing") { return .essay }
-        if t.contains("어휘") || t.contains("단어") || t.contains("vocabulary") { return .vocabulary }
-        if t.contains("리스닝") || t.contains("듣기") || t.contains("listening") || t.contains("청해") { return .listening }
-        return .general
     }
 }
 
@@ -386,7 +383,8 @@ enum Scenarios {
         """,
         initialBotMessage: "형식(APA/MLA)과 출처 정보를 알려주면 인용 예시를 만들어줄게요.",
         onSave: { summary, _ in
-            ChatHistoryStore.append(summary)        }
+            ChatHistoryStore.append(summary)
+        }
     )
 }
 

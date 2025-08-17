@@ -188,7 +188,6 @@ struct StatCard: View {
     }
 }
 
-// MARK: - Utilities
 extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(

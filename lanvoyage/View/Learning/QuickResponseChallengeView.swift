@@ -26,12 +26,20 @@ struct QuickResponseChallengeView: View {
     @State var isGrading: Bool = false
     @State var gradingDone: Bool = false
     @State var isPlaying = false
-    @State var awardedPoints = 0
+    // @State var awardedPoints = 0
     @State var showToast = false
     @State var timer: Timer?
     @State var elapsedSeconds: Int = 0
     @State private var pointsAwardedForThisAttempt: Bool = false
     @Environment(\.presentationMode) var presentationMode
+
+    var score2: Int { quickResponseReturn?.score ?? 0 }
+    var durationSeconds2: Int { elapsedSeconds }
+    var pointsToAddMode2: Int {
+        let base = max(0, score2 / 10)
+        let timeBonus = max(0, (60 - durationSeconds2) / 20)
+        return base + timeBonus
+    }
 
     var timerString: String {
         String(format: "%02d:%02d", elapsedSeconds / 60, elapsedSeconds % 60)
@@ -39,8 +47,7 @@ struct QuickResponseChallengeView: View {
 
     func startTimer() {
         timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) {
-            _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             elapsedSeconds += 1
         }
     }
@@ -49,16 +56,9 @@ struct QuickResponseChallengeView: View {
         timer?.invalidate()
         timer = nil
     }
-    
-    private func computePoints(score: Int, elapsed: Int) -> Int {
-        // Base: score/10, Time bonus: every 20s saved up to 60s
-        let base = max(0, score / 10)
-        let timeBonus = max(0, (60 - elapsed) / 20)
-        return base + timeBonus
-    }
 
     var body: some View {
-        ScrollView{
+        ScrollView {
             VStack {
                 HStack(alignment: .center) {
                     Text("Quick Response Challenge")
@@ -66,7 +66,7 @@ struct QuickResponseChallengeView: View {
                         .fontWeight(.bold)
                         .fontDesign(.rounded)
                     Spacer()
-                    Button(action:{presentationMode.wrappedValue.dismiss()}){
+                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Image(systemName: "xmark")
                     }
                 }
@@ -115,18 +115,14 @@ struct QuickResponseChallengeView: View {
                         Button(action: {
                             Task {
                                 do {
-                                    print("AI requested")
                                     isGenerating = true
                                     let role = studyStyleManager.chooseRole()
-                                    questionSentence =
-                                    try await quickResponseChallengeManager
-                                        .getSentence(role: role)
+                                    questionSentence = try await quickResponseChallengeManager.getSentence(role: role)
                                     isGenerating = false
                                     generatingAvailable = false
                                     elapsedSeconds = 0
                                     startTimer()
                                 } catch {
-                                    // Optionally handle or log the error
                                     questionSentence = nil
                                     isGenerating = false
                                 }
@@ -143,7 +139,7 @@ struct QuickResponseChallengeView: View {
                 .padding()
                 .background(Color.violet100)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
-                
+
                 if isGenerating {
                     ProgressView()
                 } else if let question = questionSentence {
@@ -178,12 +174,7 @@ struct QuickResponseChallengeView: View {
                                     role: studyStyleManager.chooseRole(),
                                     sentence: questionSentence!
                                 )
-                                resultPath = arManager.recordAudio(
-                                    uuid: newData.id
-                                )
-                                print(
-                                    "trying to save speaking audio data to path: \(resultPath)"
-                                )
+                                resultPath = arManager.recordAudio(uuid: newData.id)
                                 quickResponseData = newData
                                 isRecording = true
                                 pointsAwardedForThisAttempt = false
@@ -192,21 +183,17 @@ struct QuickResponseChallengeView: View {
                                 stopTimer()
                                 isRecording = false
                                 recordDone = true
-                                // Stop any playing audio as well when recording stops
                                 if isPlaying {
                                     arManager.stopAudio()
                                     isPlaying = false
                                 }
-                                let elapsedAtStop = elapsedSeconds
                                 Task {
                                     let result = await quickResponseChallengeManager.gradeResponse(data: quickResponseData!)
                                     await MainActor.run {
                                         self.quickResponseReturn = result
                                         if !pointsAwardedForThisAttempt {
-                                            let score = result.score
-                                            let pointsToAdd = computePoints(score: score, elapsed: elapsedAtStop)
-                                            awardedPoints = pointsToAdd
-                                            userPointsManager.addPoints(pointsToAdd)
+                                           // awardedPoints = pointsToAddMode2
+                                            userPointsManager.addPoints(pointsToAddMode2)
                                             pointsAwardedForThisAttempt = true
                                             showToast = true
                                         }
@@ -216,45 +203,7 @@ struct QuickResponseChallengeView: View {
                                 }
                             }
                         }) {
-                            Image(
-                                systemName: isRecording
-                                ? "stop.circle.fill"
-                                : "microphone.circle.fill"
-                            )
-                            .font(.system(size: 96))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [Color.pink500, Color.blue500],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                        }
-                        if recordDone {
-                            Button(action: {
-                                if !isPlaying {
-                                    if let url = URL(string: resultPath),
-                                       url.isFileURL
-                                    {
-                                        arManager.playAudio(url: url)
-                                    } else {
-                                        arManager.playAudio(
-                                            url: URL(
-                                                fileURLWithPath: resultPath
-                                            )
-                                        )
-                                    }
-                                    isPlaying = true
-                                } else {
-                                    arManager.stopAudio()
-                                    isPlaying = false
-                                }
-                            }) {
-                                Image(
-                                    systemName: isPlaying
-                                    ? "stop.circle.fill"
-                                    : "play.circle.fill"
-                                )
+                            Image(systemName: isRecording ? "stop.circle.fill" : "microphone.circle.fill")
                                 .font(.system(size: 96))
                                 .foregroundStyle(
                                     LinearGradient(
@@ -263,6 +212,30 @@ struct QuickResponseChallengeView: View {
                                         endPoint: .bottomTrailing
                                     )
                                 )
+                        }
+                        if recordDone {
+                            Button(action: {
+                                if !isPlaying {
+                                    if let url = URL(string: resultPath), url.isFileURL {
+                                        arManager.playAudio(url: url)
+                                    } else {
+                                        arManager.playAudio(url: URL(fileURLWithPath: resultPath))
+                                    }
+                                    isPlaying = true
+                                } else {
+                                    arManager.stopAudio()
+                                    isPlaying = false
+                                }
+                            }) {
+                                Image(systemName: isPlaying ? "stop.circle.fill" : "play.circle.fill")
+                                    .font(.system(size: 96))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [Color.pink500, Color.blue500],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
                             }
                         }
                     }
@@ -272,16 +245,16 @@ struct QuickResponseChallengeView: View {
                     } else {
                         if gradingDone {
                             if quickResponseReturn != nil {
-                                VStack{
-                                    HStack{
-                                        Text("\(String(describing: quickResponseReturn!.score))점")
+                                VStack {
+                                    HStack {
+                                        Text("\(score2)점")
                                         Spacer()
                                     }
                                     .font(.title2)
                                     .fontWeight(.semibold)
                                     .foregroundStyle(Color.violet700)
-                                    HStack{
-                                        Text("\(String(describing: quickResponseReturn!.description))")
+                                    HStack {
+                                        Text("\(quickResponseReturn!.description)")
                                         Spacer()
                                     }
                                     .foregroundStyle(Color.violet500)
@@ -304,7 +277,7 @@ struct QuickResponseChallengeView: View {
             }
         }
         .toast(isPresenting: $showToast, duration: 5, tapToDismiss: true) {
-            AlertToast(displayMode: .hud, type: .systemImage("p.circle.fill", Color.violet500), title: "+\(awardedPoints) XP", subTitle: "XP Granted")
+            AlertToast(displayMode: .hud, type: .systemImage("p.circle.fill", Color.violet500), title: "+\(pointsToAddMode2) XP", subTitle: "XP Granted")
         } completion: {
             showToast = false
         }

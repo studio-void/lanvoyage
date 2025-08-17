@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FirebaseCore
+import SwiftData
 
 class AppDelegate: NSObject, UIApplicationDelegate {
   func application(_ application: UIApplication,
@@ -24,5 +25,6 @@ struct lanvoyageApp: App {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(for: [StudyRecord.self])
     }
 }
