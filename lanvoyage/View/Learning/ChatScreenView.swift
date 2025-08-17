@@ -1,5 +1,5 @@
 //
-//  ChatView.swift
+//  ChatScenarioView.swift
 //  lanvoyage
 //
 //  Created by Yeeun on 8/15/25.
@@ -9,7 +9,17 @@ import SwiftUI
 import VoidUtilities
 import FirebaseAI
 
-struct ChatView: View {
+struct ChatScenario {
+    var headerTitle: String = "AI Tool Master"
+    var headerSubtitle: String
+    var systemPrompt: String
+    var initialBotMessage: String
+    var onSave: (ChatSummary, [ChatScreenView.ChatMessage]) -> Void = { s, _ in
+        ChatStore.append(s)
+    }
+}
+
+struct ChatScreenView: View {
     enum Role { case user, bot }
     struct ChatMessage: Identifiable {
         let id = UUID()
@@ -17,6 +27,7 @@ struct ChatView: View {
         var text: String
     }
 
+    var scenario: ChatScenario
     var onClose: () -> Void = {}
     var autoFocus: Bool = true
 
@@ -24,20 +35,34 @@ struct ChatView: View {
     private let summaryModel: GenerativeModel
 
     init(autoFocus: Bool = true, onClose: @escaping () -> Void = {}) {
+        self.init(
+            scenario: .init(
+                headerSubtitle: "Essay Master",
+                systemPrompt: """
+                너는 GIST 학생들의 외국어(특히 영어) 학습을 돕는 AI 멘토야.
+                - 영어 학습 질문에는 간단한 설명과 예문 2개 이상을 제공해.
+                - 진로/학습 전략은 단계별로, 실행 가능한 조언으로 정리해.
+                - 답변은 너무 길지 않게, 쉬운 문장으로 또박또박 하도록 해.
+                """,
+                initialBotMessage: "GIST님께서 작성하고자 하는 Essay의 키워드와 주제 등을 입력해주세요! 많은 정보를 주실수록 양질의 에세이가 생성됩니다 :)"
+            ),
+            autoFocus: autoFocus,
+            onClose: onClose
+        )
+    }
+
+    init(
+        scenario: ChatScenario,
+        autoFocus: Bool = true,
+        onClose: @escaping () -> Void = {}
+    ) {
+        self.scenario = scenario
         self.autoFocus = autoFocus
         self.onClose = onClose
 
         let ai = FirebaseAI.firebaseAI()
 
-        let systemPrompt = ModelContent(
-            role: "system",
-            parts: ["""
-            너는 GIST 학생들의 외국어(특히 영어) 학습을 돕는 AI 멘토야.
-            - 영어 학습 질문에는 간단한 설명과 예문 2개 이상을 제공해.
-            - 진로/학습 전략은 단계별로, 실행 가능한 조언으로 정리해.
-            - 답변은 너무 길지 않게, 쉬운 문장으로 또박또박 하도록 해.
-            """]
-        )
+        let systemPrompt = ModelContent(role: "system", parts: [scenario.systemPrompt])
         self.chatModel = ai.generativeModel(
             modelName: "gemini-2.0-flash-001",
             systemInstruction: systemPrompt
@@ -52,7 +77,7 @@ struct ChatView: View {
                 "details": .string(description: "실행할 해결책, 최대 16자, 말줄임표 금지")
             ]
         )
-        
+
         self.summaryModel = ai.generativeModel(
             modelName: "gemini-2.5-flash",
             generationConfig: GenerationConfig(
@@ -62,9 +87,7 @@ struct ChatView: View {
         )
     }
 
-    @State private var messages: [ChatMessage] = [
-        .init(role: .bot, text: "Hi there! I'm your AI mentor.\nHow can I help you today?")
-    ]
+    @State private var messages: [ChatMessage] = []
     @State private var input: String = ""
     @FocusState private var focused: Bool
     @State private var busy = false
@@ -90,6 +113,9 @@ struct ChatView: View {
             .onTapGesture { focused = false }
             .defaultScrollAnchor(.bottom)
             .onAppear {
+                if messages.isEmpty {
+                    messages = [.init(role: .bot, text: scenario.initialBotMessage)]
+                }
                 if autoFocus { focused = true }
                 if let last = messages.last?.id { proxy.scrollTo(last, anchor: .bottom) }
             }
@@ -103,19 +129,19 @@ struct ChatView: View {
                     .ignoresSafeArea(edges: .bottom)
             }
         }
-        .navigationTitle("AI Mentor")
-        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button { saveSummaryAndClose() } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .semibold))
-                        .padding(10)
+            ToolbarItem(placement: .principal) {
+                VStack(spacing: 2) {
+                    Text(scenario.headerTitle).font(.headline)
+                    Text(scenario.headerSubtitle)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
-                .accessibilityLabel("닫기")
             }
         }
+        .navigationBarTitleDisplayMode(.inline)
     }
+
 
     @ViewBuilder
     private func messageRow(_ m: ChatMessage) -> some View {
@@ -165,6 +191,7 @@ struct ChatView: View {
             .overlay(Image(systemName: "person.crop.circle.fill").foregroundColor(.white))
     }
 
+
     private var inputBar: some View {
         HStack(spacing: 12) {
             TextField("AI 멘토와 대화해보세요.", text: $input, axis: .vertical)
@@ -185,6 +212,7 @@ struct ChatView: View {
         .padding(.vertical, 12)
         .background(Color(.systemBackground).opacity(0.98))
     }
+
 
     private func send() {
         let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -262,7 +290,8 @@ struct ChatView: View {
                 topic: keyword,
                 messageCount: messages.count
             )
-            ChatStore.append(summary)
+
+            scenario.onSave(summary, messages)
 
             summarizing = false
             withAnimation(.spring(response: 0.36, dampingFraction: 0.9, blendDuration: 0.2)) {
@@ -270,6 +299,7 @@ struct ChatView: View {
             }
         }
     }
+
 
     private func limit(_ s: String, to max: Int) -> String {
         if s.count <= max { return s }
@@ -287,11 +317,7 @@ struct ChatView: View {
         return t
     }
 
-    private struct CardJSON: Codable {
-        let title: String
-        let keyword: String
-        let details: String
-    }
+    private struct CardJSON: Codable { let title: String; let keyword: String; let details: String }
 
     private enum HeuCat { case pronunciation, grammar, reading, news, business, presentation, essay, vocabulary, listening, general
         var title: String {
@@ -339,6 +365,33 @@ struct ChatView: View {
     }
 }
 
+enum Scenarios {
+    static let essay = ChatScenario(
+        headerSubtitle: "Essay Master",
+        systemPrompt: """
+        너는 학술 에세이 멘토다. 서론-본론-결론 구조와 주제문/전환을 지도한다.
+        모호하면 2~3개의 명확 질문으로 요구사항을 좁혀라.
+        """,
+        initialBotMessage: "에세이 주제/키워드를 알려주면 구조부터 같이 잡아볼게요.",
+        onSave: { summary, _ in
+            ChatHistoryStore.append(summary)
+        }
+    )
+
+    static let citation = ChatScenario(
+        headerSubtitle: "Citation Helper",
+        systemPrompt: """
+        너는 인용/참고문헌 도우미다. APA/MLA 예시와 본문 내 인용을 제시하고,
+        변경 이유를 간단히 설명한다.
+        """,
+        initialBotMessage: "형식(APA/MLA)과 출처 정보를 알려주면 인용 예시를 만들어줄게요.",
+        onSave: { summary, _ in
+            ChatHistoryStore.append(summary)        }
+    )
+}
+
 #Preview {
-    NavigationStack { ChatView(autoFocus: false) }
+    NavigationStack {
+        ChatScreenView(scenario: Scenarios.essay, autoFocus: false)
+    }
 }
