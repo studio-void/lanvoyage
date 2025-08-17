@@ -16,7 +16,7 @@ struct ChatScenario {
     var headerSubtitle: String
     var systemPrompt: String
     var initialBotMessage: String
-    /// onSave is a hook for external handling, but does NOT save to ChatHistoryStore directly
+    /// onSave is just a hook for external handling (NOT saving to ChatHistoryStore directly)
     var onSave: (ChatSummary, [ChatScreenView.ChatMessage]) -> Void = { s, _ in
         ChatStore.append(s)
     }
@@ -39,6 +39,7 @@ struct ChatScreenView: View {
 
     private let chatModel: GenerativeModel
     private let scoringModel: GenerativeModel
+    private let extractionModel: GenerativeModel
 
     init(autoFocus: Bool = true, onClose: @escaping () -> Void = {}) {
         self.init(
@@ -74,7 +75,6 @@ struct ChatScreenView: View {
             systemInstruction: systemPrompt
         )
 
-        // Keep original essay scoring schema (score/reason)
         let scoreSchema = Schema.object(
             properties: [
                 "score": .integer(description: "0~100 사이의 정수 점수"),
@@ -86,6 +86,19 @@ struct ChatScreenView: View {
             generationConfig: GenerationConfig(
                 responseMIMEType: "application/json",
                 responseSchema: scoreSchema
+            )
+        )
+
+        let extractionSchema = Schema.object(
+            properties: [
+                "content": .string(description: "최종 결과 글 전체. 설명/부연 없이 글만.")
+            ]
+        )
+        self.extractionModel = ai.generativeModel(
+            modelName: "gemini-2.0-flash-001",
+            generationConfig: GenerationConfig(
+                responseMIMEType: "application/json",
+                responseSchema: extractionSchema
             )
         )
     }
@@ -112,6 +125,29 @@ struct ChatScreenView: View {
         }
     }
 
+    private func extractCoreContent(from raw: String) async -> String {
+        let prompt = """
+        아래 텍스트에서 '최종 결과물' 글 본문만 뽑아서 반환하라.
+        - 불필요한 설명, 지시, 부연 텍스트는 제거.
+        - 글 전체가 빠짐없이 포함되어야 함.
+        - JSON { "content": "..." } 형태로만 반환.
+
+        텍스트:
+        \(raw)
+        """
+        do {
+            let res = try await extractionModel.generateContent(prompt)
+            if let t = res.text, let data = t.data(using: .utf8) {
+                struct Extracted: Decodable { let content: String }
+                if let parsed = try? JSONDecoder().decode(Extracted.self, from: data) {
+                    return parsed.content.trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+            }
+        } catch {}
+        return raw.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    // MARK: - UI
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
@@ -176,6 +212,7 @@ struct ChatScreenView: View {
         }
     }
 
+    // MARK: - 메시지 UI
     @ViewBuilder
     private func messageRow(_ m: ChatMessage) -> some View {
         if m.role == .user {
@@ -276,33 +313,35 @@ struct ChatScreenView: View {
                     bot.text = res.text ?? "(no response)"
                     messages[botIndex] = bot
                 } catch {
-                    messages[botIndex].text = "오류: \\(error.localizedDescription)"
+                    messages[botIndex].text = "오류: \(error.localizedDescription)"
                 }
             }
             busy = false
         }
     }
 
+    // MARK: - 최종본 저장
     private func saveFinalDocument() {
         guard let lastBot = messages.last(where: { $0.role == .bot })?.text else { return }
-        let finalBody = extractFinalEssay(from: lastBot).trimmingCharacters(in: .whitespacesAndNewlines)
-        guard finalBody.isEmpty == false else { return }
-
-        let firstLine = finalBody.split(separator: "\\n", maxSplits: 1, omittingEmptySubsequences: true).first ?? Substring("Essay")
-        let title = String(firstLine.prefix(24))
-        let snippet = String(finalBody.prefix(60))
-
-        let summary = ChatSummary(
-            id: UUID().uuidString,
-            title: title,
-            snippet: snippet,
-            timestamp: Date(),
-            topic: scenario.headerSubtitle,
-            messageCount: messages.count
-        )
-
         savingFinal = true
+
         Task {
+            let finalBody = await extractCoreContent(from: lastBot)
+            guard finalBody.isEmpty == false else { return }
+
+            let firstLine = finalBody.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: true).first ?? Substring("Essay")
+            let title = String(firstLine.prefix(24))
+            let snippet = String(finalBody.prefix(60))
+
+            let summary = ChatSummary(
+                id: UUID().uuidString,
+                title: title,
+                snippet: snippet,
+                timestamp: Date(),
+                topic: scenario.headerSubtitle,
+                messageCount: messages.count
+            )
+
             let (scored, reason) = await scoreFinalEssay(finalBody)
             score3 = scored
 
@@ -320,7 +359,6 @@ struct ChatScreenView: View {
 
             userPointsManager.addPoints(pointsToAddMode3)
 
-            // Call scenario hook but do NOT re-append to ChatHistoryStore here
             scenario.onSave(summary, messages)
             savingFinal = false
             showSavedAlert = true
@@ -333,7 +371,7 @@ struct ChatScreenView: View {
         기준: 논지명료성(25) 구조/전개(25) 근거/예시(20) 문장력/문법(20) 결론/시사점(10).
         JSON만 반환: {"score": <정수 0..100>, "reason": "<80자 이내 근거 요약>"}.
         글:
-        \\(text)
+        \(text)
         """
         do {
             let res = try await scoringModel.generateContent(rubric)
@@ -349,18 +387,6 @@ struct ChatScreenView: View {
         let fallback = max(40, min(95, 50 + wc/20))
         return (fallback, "자동 백업 채점")
     }
-
-    private func extractFinalEssay(from raw: String) -> String {
-        let t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let r1 = t.range(of: "```"), let r2 = t.range(of: "```", range: r1.upperBound..<t.endIndex) {
-            return String(t[r1.upperBound..<r2.lowerBound])
-        }
-        if let r = t.range(of: "최종본") ?? t.range(of: "Final") ?? t.range(of: "final", options: .caseInsensitive) {
-            let after = t[r.upperBound...]
-            return String(after).trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-        return t
-    }
 }
 
 enum Scenarios {
@@ -371,8 +397,7 @@ enum Scenarios {
         모호하면 2~3개의 명확 질문으로 요구사항을 좁혀라.
         """,
         initialBotMessage: "에세이 주제/키워드를 알려주면 구조부터 같이 잡아볼게요.",
-        onSave: { _, _ in
-        }
+        onSave: { _, _ in }
     )
 
     static let citation = ChatScenario(
@@ -382,8 +407,7 @@ enum Scenarios {
         변경 이유를 간단히 설명한다.
         """,
         initialBotMessage: "형식(APA/MLA)과 출처 정보를 알려주면 인용 예시를 만들어줄게요.",
-        onSave: { _, _ in
-        }
+        onSave: { _, _ in }
     )
 }
 
