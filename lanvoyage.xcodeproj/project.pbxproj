@@ -10,6 +10,7 @@
 		52D484012E50725D0044C181 /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = 52D484002E50725D0044C181 /* FirebaseAI */; };
 		52D484032E50725D0044C181 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 52D484022E50725D0044C181 /* FirebaseCore */; };
 		E98A50772E51C2EC00A05F31 /* AlertToast in Frameworks */ = {isa = PBXBuildFile; productRef = E98A50762E51C2EC00A05F31 /* AlertToast */; };
+		E98A50DB2E51D09800A05F31 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = E98A50DA2E51D09800A05F31 /* MarkdownUI */; };
 		E99380132E4EF853000F8BE4 /* VoidUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = E99380122E4EF853000F8BE4 /* VoidUtilities */; };
 		E9BF7F762E4DF8AC0029B239 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		E9F9E9962E4EF164005FFAD1 /* SwiftUIX in Frameworks */ = {isa = PBXBuildFile; productRef = E9F9E9952E4EF164005FFAD1 /* SwiftUIX */; };
@@ -33,6 +34,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E9BF7F762E4DF8AC0029B239 /* (null) in Frameworks */,
+				E98A50DB2E51D09800A05F31 /* MarkdownUI in Frameworks */,
 				52D484032E50725D0044C181 /* FirebaseCore in Frameworks */,
 				52D484012E50725D0044C181 /* FirebaseAI in Frameworks */,
 				E98A50772E51C2EC00A05F31 /* AlertToast in Frameworks */,
@@ -85,6 +87,7 @@
 				52D484002E50725D0044C181 /* FirebaseAI */,
 				52D484022E50725D0044C181 /* FirebaseCore */,
 				E98A50762E51C2EC00A05F31 /* AlertToast */,
+				E98A50DA2E51D09800A05F31 /* MarkdownUI */,
 			);
 			productName = lanvoyage;
 			productReference = E9DCAAA92E4DF03E0054D342 /* lanvoyage.app */;
@@ -119,6 +122,7 @@
 				E99380112E4EF853000F8BE4 /* XCRemoteSwiftPackageReference "VoidUtilities" */,
 				52D483FF2E50722E0044C181 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				E98A50752E51C2EB00A05F31 /* XCRemoteSwiftPackageReference "AlertToast" */,
+				E98A50D92E51D09800A05F31 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E9DCAAAA2E4DF03E0054D342 /* Products */;
@@ -282,12 +286,13 @@
 				DEVELOPMENT_TEAM = J9ZM2PBPP6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Lan Voyagee";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "(필수) 언어 학습을 위해 마이크 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -315,12 +320,13 @@
 				DEVELOPMENT_TEAM = J9ZM2PBPP6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Lan Voyagee";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "(필수) 언어 학습을 위해 마이크 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -378,6 +384,14 @@
 				minimumVersion = 1.3.9;
 			};
 		};
+		E98A50D92E51D09800A05F31 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.1;
+			};
+		};
 		E99380112E4EF853000F8BE4 /* XCRemoteSwiftPackageReference "VoidUtilities" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/studio-void/VoidUtilities";
@@ -411,6 +425,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E98A50752E51C2EB00A05F31 /* XCRemoteSwiftPackageReference "AlertToast" */;
 			productName = AlertToast;
+		};
+		E98A50DA2E51D09800A05F31 /* MarkdownUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E98A50D92E51D09800A05F31 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			productName = MarkdownUI;
 		};
 		E99380122E4EF853000F8BE4 /* VoidUtilities */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -8,6 +8,7 @@
 import SwiftUI
 import VoidUtilities
 import FirebaseAI
+import MarkdownUI
 
 struct ChatView: View {
     enum Role { case user, bot }
@@ -41,7 +42,7 @@ struct ChatView: View {
             """]
         )
         self.chatModel = ai.generativeModel(
-            modelName: "gemini-2.0-flash-001",
+            modelName: "gemini-2.5-flash",
             systemInstruction: systemPrompt
         )
 
@@ -71,6 +72,14 @@ struct ChatView: View {
     @FocusState private var focused: Bool
     @State private var busy = false
     @State private var summarizing = false
+
+    private func contentsFromMessages(limit: Int = 24) -> [ModelContent] {
+        let recent = messages.suffix(limit)
+        return recent.map { m in
+            let role = (m.role == .user) ? "user" : "model"
+            return ModelContent(role: role, parts: [m.text])
+        }
+    }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -145,8 +154,11 @@ struct ChatView: View {
     }
 
     private func bubble(_ text: String, isUser: Bool) -> some View {
-        Text(text)
+        Markdown(text)
             .font(.body)
+            .markdownTextStyle() {
+                ForegroundColor(isUser ? .white : .primary)
+            }
             .foregroundColor(isUser ? .white : .primary)
             .padding(.vertical, 10)
             .padding(.horizontal, 14)
@@ -200,7 +212,9 @@ struct ChatView: View {
 
         Task {
             do {
-                for try await chunk in try chatModel.generateContentStream(text) {
+                let history = contentsFromMessages(limit: 24)
+                let request = history + [ModelContent(role: "user", parts: [text])]
+                for try await chunk in try chatModel.generateContentStream(request) {
                     if let t = chunk.text, !t.isEmpty {
                         bot.text += t
                         messages[botIndex] = bot
@@ -208,7 +222,9 @@ struct ChatView: View {
                 }
             } catch {
                 do {
-                    let res = try await chatModel.generateContent(text)
+                    let history = contentsFromMessages(limit: 24)
+                    let request = history + [ModelContent(role: "user", parts: [text])]
+                    let res = try await chatModel.generateContent(request)
                     bot.text = res.text ?? "(no response)"
                     messages[botIndex] = bot
                 } catch {

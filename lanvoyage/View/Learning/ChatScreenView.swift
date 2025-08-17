@@ -5,9 +5,10 @@
 //  Created by Yeeun on 8/15/25.
 //
 
+import FirebaseAI
+import MarkdownUI
 import SwiftUI
 import VoidUtilities
-import FirebaseAI
 
 struct ChatScenario {
     var headerTitle: String = "AI Tool Master"
@@ -39,12 +40,13 @@ struct ChatScreenView: View {
             scenario: .init(
                 headerSubtitle: "Essay Master",
                 systemPrompt: """
-                너는 GIST 학생들의 외국어(특히 영어) 학습을 돕는 AI 멘토야.
-                - 영어 학습 질문에는 간단한 설명과 예문 2개 이상을 제공해.
-                - 진로/학습 전략은 단계별로, 실행 가능한 조언으로 정리해.
-                - 답변은 너무 길지 않게, 쉬운 문장으로 또박또박 하도록 해.
-                """,
-                initialBotMessage: "GIST님께서 작성하고자 하는 Essay의 키워드와 주제 등을 입력해주세요! 많은 정보를 주실수록 양질의 에세이가 생성됩니다 :)"
+                    너는 GIST 학생들의 외국어(특히 영어) 학습을 돕는 AI 멘토야.
+                    - 영어 학습 질문에는 간단한 설명과 예문 2개 이상을 제공해.
+                    - 진로/학습 전략은 단계별로, 실행 가능한 조언으로 정리해.
+                    - 답변은 너무 길지 않게, 쉬운 문장으로 또박또박 하도록 해.
+                    """,
+                initialBotMessage:
+                    "GIST님께서 작성하고자 하는 Essay의 키워드와 주제 등을 입력해주세요! 많은 정보를 주실수록 양질의 에세이가 생성됩니다 :)"
             ),
             autoFocus: autoFocus,
             onClose: onClose
@@ -62,7 +64,10 @@ struct ChatScreenView: View {
 
         let ai = FirebaseAI.firebaseAI()
 
-        let systemPrompt = ModelContent(role: "system", parts: [scenario.systemPrompt])
+        let systemPrompt = ModelContent(
+            role: "system",
+            parts: [scenario.systemPrompt]
+        )
         self.chatModel = ai.generativeModel(
             modelName: "gemini-2.0-flash-001",
             systemInstruction: systemPrompt
@@ -72,9 +77,10 @@ struct ChatScreenView: View {
             properties: [
                 "title": .string(description: "대화 주제, 최대 12자"),
                 "keyword": .enumeration(values: [
-                    "발음 교정","문법","문맥 이해","시사 영어","비즈니스","발표","에세이","어휘","리스닝","학습"
+                    "발음 교정", "문법", "문맥 이해", "시사 영어", "비즈니스", "발표", "에세이", "어휘",
+                    "리스닝", "학습",
                 ]),
-                "details": .string(description: "실행할 해결책, 최대 16자, 말줄임표 금지")
+                "details": .string(description: "실행할 해결책, 최대 16자, 말줄임표 금지"),
             ]
         )
 
@@ -92,6 +98,14 @@ struct ChatScreenView: View {
     @FocusState private var focused: Bool
     @State private var busy = false
     @State private var summarizing = false
+    // Helper to convert recent messages into [ModelContent] for history
+    private func contentsFromMessages(limit: Int = 24) -> [ModelContent] {
+        let recent = messages.suffix(limit)
+        return recent.map { m in
+            let role = (m.role == .user) ? "user" : "model"
+            return ModelContent(role: role, parts: [m.text])
+        }
+    }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -114,14 +128,20 @@ struct ChatScreenView: View {
             .defaultScrollAnchor(.bottom)
             .onAppear {
                 if messages.isEmpty {
-                    messages = [.init(role: .bot, text: scenario.initialBotMessage)]
+                    messages = [
+                        .init(role: .bot, text: scenario.initialBotMessage)
+                    ]
                 }
                 if autoFocus { focused = true }
-                if let last = messages.last?.id { proxy.scrollTo(last, anchor: .bottom) }
+                if let last = messages.last?.id {
+                    proxy.scrollTo(last, anchor: .bottom)
+                }
             }
             .onChange(of: messages.last?.id) { _, new in
                 guard let new else { return }
-                withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(new, anchor: .bottom) }
+                withAnimation(.easeOut(duration: 0.2)) {
+                    proxy.scrollTo(new, anchor: .bottom)
+                }
             }
             .safeAreaInset(edge: .bottom) {
                 inputBar
@@ -141,7 +161,6 @@ struct ChatScreenView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
     }
-
 
     @ViewBuilder
     private func messageRow(_ m: ChatMessage) -> some View {
@@ -169,8 +188,11 @@ struct ChatScreenView: View {
     }
 
     private func bubble(_ text: String, isUser: Bool) -> some View {
-        Text(text)
+        Markdown(text)
             .font(.body)
+            .markdownTextStyle {
+                ForegroundColor(isUser ? .white : .primary)
+            }
             .foregroundColor(isUser ? .white : .primary)
             .padding(.vertical, 10)
             .padding(.horizontal, 14)
@@ -184,13 +206,20 @@ struct ChatScreenView: View {
 
     private var botAvatar: some View {
         Circle().fill(Color(.systemGray5)).frame(width: 28, height: 28)
-            .overlay(Image(systemName: "person.crop.circle.fill").foregroundColor(.gray))
+            .overlay(
+                Image(systemName: "person.crop.circle.fill").foregroundColor(
+                    .gray
+                )
+            )
     }
     private var userAvatar: some View {
         Circle().fill(Color.violet200).frame(width: 28, height: 28)
-            .overlay(Image(systemName: "person.crop.circle.fill").foregroundColor(.white))
+            .overlay(
+                Image(systemName: "person.crop.circle.fill").foregroundColor(
+                    .white
+                )
+            )
     }
-
 
     private var inputBar: some View {
         HStack(spacing: 12) {
@@ -199,20 +228,28 @@ struct ChatScreenView: View {
                 .font(.callout)
                 .padding(.vertical, 12)
                 .padding(.horizontal, 14)
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color(.systemGray6)))
+                .background(
+                    RoundedRectangle(cornerRadius: 12).fill(Color(.systemGray6))
+                )
                 .focused($focused)
 
             Button(action: send) {
-                Image(systemName: busy ? "stop.circle.fill" : "arrow.up.circle.fill")
-                    .font(.system(size: 28, weight: .semibold))
+                Image(
+                    systemName: busy
+                        ? "stop.circle.fill" : "arrow.up.circle.fill"
+                )
+                .font(.system(size: 28, weight: .semibold))
             }
-            .disabled(busy || input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .disabled(
+                busy
+                    || input.trimmingCharacters(in: .whitespacesAndNewlines)
+                        .isEmpty
+            )
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(Color(.systemBackground).opacity(0.98))
     }
-
 
     private func send() {
         let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -226,7 +263,12 @@ struct ChatScreenView: View {
 
         Task {
             do {
-                for try await chunk in try chatModel.generateContentStream(text) {
+                let history = contentsFromMessages(limit: 24)
+                let request =
+                    history + [ModelContent(role: "user", parts: [text])]
+                for try await chunk in try chatModel.generateContentStream(
+                    request
+                ) {
                     if let t = chunk.text, !t.isEmpty {
                         bot.text += t
                         messages[botIndex] = bot
@@ -234,11 +276,15 @@ struct ChatScreenView: View {
                 }
             } catch {
                 do {
-                    let res = try await chatModel.generateContent(text)
+                    let history = contentsFromMessages(limit: 24)
+                    let request =
+                        history + [ModelContent(role: "user", parts: [text])]
+                    let res = try await chatModel.generateContent(request)
                     bot.text = res.text ?? "(no response)"
                     messages[botIndex] = bot
                 } catch {
-                    messages[botIndex].text = "오류: \(error.localizedDescription)"
+                    messages[botIndex].text =
+                        "오류: \(error.localizedDescription)"
                 }
             }
             busy = false
@@ -249,17 +295,18 @@ struct ChatScreenView: View {
         summarizing = true
         Task {
             let joined = messages.suffix(12).map { m in
-                (m.role == .user ? "학생: " : "AI: ") + m.text.replacingOccurrences(of: "\n", with: " ")
+                (m.role == .user ? "학생: " : "AI: ")
+                    + m.text.replacingOccurrences(of: "\n", with: " ")
             }.joined(separator: "\n")
 
             let prompt = """
-            대화를 카드로 요약하라.
-            title: 대화 주제(최대 12자)
-            keyword: 발음 교정/문법/문맥 이해/시사 영어/비즈니스/발표/에세이/어휘/리스닝/학습 중 하나
-            details: 실행할 해결책 한 문장(최대 16자, 말줄임표 금지)
-            대화:
-            \(joined)
-            """
+                대화를 카드로 요약하라.
+                title: 대화 주제(최대 12자)
+                keyword: 발음 교정/문법/문맥 이해/시사 영어/비즈니스/발표/에세이/어휘/리스닝/학습 중 하나
+                details: 실행할 해결책 한 문장(최대 16자, 말줄임표 금지)
+                대화:
+                \(joined)
+                """
 
             var title = "AI 영어 학습"
             var keyword = "학습"
@@ -268,16 +315,20 @@ struct ChatScreenView: View {
             do {
                 let res = try await summaryModel.generateContent(prompt)
                 if let text = res.text, let data = text.data(using: .utf8) {
-                    if let parsed = try? JSONDecoder().decode(CardJSON.self, from: data) {
-                        title   = limit(parsed.title,   to: 12)
+                    if let parsed = try? JSONDecoder().decode(
+                        CardJSON.self,
+                        from: data
+                    ) {
+                        title = limit(parsed.title, to: 12)
                         keyword = parsed.keyword
                         details = sanitizeTo16(parsed.details)
                     }
                 }
             } catch {
-                let lastAsk = messages.last(where: { $0.role == .user })?.text ?? ""
+                let lastAsk =
+                    messages.last(where: { $0.role == .user })?.text ?? ""
                 let cat = heuristicCategory(from: lastAsk)
-                title   = limit(cat.title,   to: 12)
+                title = limit(cat.title, to: 12)
                 keyword = cat.keyword
                 details = "표현 3개 만들기"
             }
@@ -294,12 +345,17 @@ struct ChatScreenView: View {
             scenario.onSave(summary, messages)
 
             summarizing = false
-            withAnimation(.spring(response: 0.36, dampingFraction: 0.9, blendDuration: 0.2)) {
+            withAnimation(
+                .spring(
+                    response: 0.36,
+                    dampingFraction: 0.9,
+                    blendDuration: 0.2
+                )
+            ) {
                 onClose()
             }
         }
     }
-
 
     private func limit(_ s: String, to max: Int) -> String {
         if s.count <= max { return s }
@@ -307,19 +363,26 @@ struct ChatScreenView: View {
     }
 
     private func sanitizeTo16(_ raw: String) -> String {
-        var t = raw
+        var t =
+            raw
             .replacingOccurrences(of: "...", with: "")
             .replacingOccurrences(of: "…", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         if t.count > 16 { t = String(t.prefix(16)) }
-        let badEnds: [Character] = [",","·","-","—",":",";"]
+        let badEnds: [Character] = [",", "·", "-", "—", ":", ";"]
         while let last = t.last, badEnds.contains(last) { t.removeLast() }
         return t
     }
 
-    private struct CardJSON: Codable { let title: String; let keyword: String; let details: String }
+    private struct CardJSON: Codable {
+        let title: String
+        let keyword: String
+        let details: String
+    }
 
-    private enum HeuCat { case pronunciation, grammar, reading, news, business, presentation, essay, vocabulary, listening, general
+    private enum HeuCat {
+        case pronunciation, grammar, reading, news, business, presentation,
+            essay, vocabulary, listening, general
         var title: String {
             switch self {
             case .pronunciation: return "스피킹 발음 교정"
@@ -352,15 +415,43 @@ struct ChatScreenView: View {
 
     private func heuristicCategory(from text: String) -> HeuCat {
         let t = text.lowercased()
-        if t.contains("발음") || t.contains("pronunciation") || t.contains("억양") || t.contains("accent") { return .pronunciation }
+        if t.contains("발음") || t.contains("pronunciation") || t.contains("억양")
+            || t.contains("accent")
+        {
+            return .pronunciation
+        }
         if t.contains("문법") || t.contains("grammar") { return .grammar }
-        if t.contains("독해") || t.contains("reading") || t.contains("comprehension") || t.contains("문맥") { return .reading }
-        if t.contains("뉴스") || t.contains("시사") || t.contains("news") { return .news }
-        if t.contains("비즈니스") || t.contains("business") || t.contains("메일") || t.contains("email") { return .business }
-        if t.contains("발표") || t.contains("presentation") || t.contains("프레젠테이션") { return .presentation }
-        if t.contains("에세이") || t.contains("essay") || t.contains("작문") || t.contains("writing") { return .essay }
-        if t.contains("어휘") || t.contains("단어") || t.contains("vocabulary") { return .vocabulary }
-        if t.contains("리스닝") || t.contains("듣기") || t.contains("listening") || t.contains("청해") { return .listening }
+        if t.contains("독해") || t.contains("reading")
+            || t.contains("comprehension") || t.contains("문맥")
+        {
+            return .reading
+        }
+        if t.contains("뉴스") || t.contains("시사") || t.contains("news") {
+            return .news
+        }
+        if t.contains("비즈니스") || t.contains("business") || t.contains("메일")
+            || t.contains("email")
+        {
+            return .business
+        }
+        if t.contains("발표") || t.contains("presentation")
+            || t.contains("프레젠테이션")
+        {
+            return .presentation
+        }
+        if t.contains("에세이") || t.contains("essay") || t.contains("작문")
+            || t.contains("writing")
+        {
+            return .essay
+        }
+        if t.contains("어휘") || t.contains("단어") || t.contains("vocabulary") {
+            return .vocabulary
+        }
+        if t.contains("리스닝") || t.contains("듣기") || t.contains("listening")
+            || t.contains("청해")
+        {
+            return .listening
+        }
         return .general
     }
 }
@@ -369,9 +460,9 @@ enum Scenarios {
     static let essay = ChatScenario(
         headerSubtitle: "Essay Master",
         systemPrompt: """
-        너는 학술 에세이 멘토다. 서론-본론-결론 구조와 주제문/전환을 지도한다.
-        모호하면 2~3개의 명확 질문으로 요구사항을 좁혀라.
-        """,
+            너는 학술 에세이 멘토다. 서론-본론-결론 구조와 주제문/전환을 지도한다.
+            모호하면 2~3개의 명확 질문으로 요구사항을 좁혀라.
+            """,
         initialBotMessage: "에세이 주제/키워드를 알려주면 구조부터 같이 잡아볼게요.",
         onSave: { summary, _ in
             ChatHistoryStore.append(summary)
@@ -381,12 +472,13 @@ enum Scenarios {
     static let citation = ChatScenario(
         headerSubtitle: "Citation Helper",
         systemPrompt: """
-        너는 인용/참고문헌 도우미다. APA/MLA 예시와 본문 내 인용을 제시하고,
-        변경 이유를 간단히 설명한다.
-        """,
+            너는 인용/참고문헌 도우미다. APA/MLA 예시와 본문 내 인용을 제시하고,
+            변경 이유를 간단히 설명한다.
+            """,
         initialBotMessage: "형식(APA/MLA)과 출처 정보를 알려주면 인용 예시를 만들어줄게요.",
         onSave: { summary, _ in
-            ChatHistoryStore.append(summary)        }
+            ChatHistoryStore.append(summary)
+        }
     )
 }
 
