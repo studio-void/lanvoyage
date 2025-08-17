@@ -188,39 +188,6 @@ struct TranslationChallengeView: View {
                             Text("영작을 채점하고 있어요. 잠시만 기다려 주세요...")
                         }
                     } else {
-                        /*
-                        if (userAnswerPoint != nil && userAnswerFeedback != nil) {
-                            HStack {
-                                Text("Step 2 - 영작 평가 결과")
-                                Spacer()
-                            }
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .padding(.bottom, 4)
-                            VStack{
-                                HStack {
-                                    Text(
-                                        "\(userAnswerPoint!)점"
-                                    )
-                                    Spacer()
-                                }
-                                .font(.headline)
-                                .foregroundStyle(Color.violet500)
-                                .fontWeight(.semibold)
-                                .padding(.bottom, 8)
-                                HStack {
-                                    Text(
-                                        userAnswerFeedback!
-                                    )
-                                    Spacer()
-                                }
-                            }
-                            .padding()
-                            .background(Color.violet50)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                            .padding(.bottom)
-                        }
-                         */
                     }
                 }
                 // MARK: - Step 3
