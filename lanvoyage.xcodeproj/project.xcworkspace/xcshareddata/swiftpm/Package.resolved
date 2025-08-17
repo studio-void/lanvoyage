@@ -141,8 +141,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/studio-void/VoidUtilities",
       "state" : {
-        "revision" : "3e743e06696dc6a6f546dafeac1dfb50d9850654",
-        "version" : "1.0.0"
+        "revision" : "9e8335fd142ca335fd8cdbe6e05e1acd73389346",
+        "version" : "1.1.0"
       }
     }
   ],
