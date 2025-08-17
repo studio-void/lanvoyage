@@ -1,5 +1,5 @@
 {
-  "originHash" : "b1b4d7d5ca2a77d76812b7ceaa7b9a66db9218f99e2fff8aecfff23c080682b4",
+  "originHash" : "88ec8051b69e48282d6261b6c0e39ef21fa18f2faa4dabd7dba2214375112ae4",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -177,8 +177,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/studio-void/VoidUtilities",
       "state" : {
-        "revision" : "9e8335fd142ca335fd8cdbe6e05e1acd73389346",
-        "version" : "1.1.0"
+        "revision" : "3c32a49e7b878df6b2b5ab6fdf40a5569cd71822",
+        "version" : "1.1.1"
       }
     }
   ],

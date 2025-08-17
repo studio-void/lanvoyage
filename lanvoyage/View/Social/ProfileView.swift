@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import VoidUtilities
 
 private enum Token {
     static let card = Color.white
@@ -31,6 +32,14 @@ struct ProfileView: View {
                         avatarBlock()
                         progressBlock()
                         overallBlock()
+                            .padding(.bottom)
+                        NavigationLink(destination: SettingMainView().navigationBarBackButtonHidden()) {
+                            HStack{
+                                Image(systemName: "gear")
+                                Text("설정")
+                            }
+                            .foregroundStyle(Color.gray600)
+                        }
                     }
                 }
                 Spacer()
@@ -39,6 +48,7 @@ struct ProfileView: View {
                         .navigationBarBackButtonHidden(true)
                 ) {
                     CustomButtonView(title: "학습 분석 결과 보러가기", kind: .outline)
+                        .padding(0.3)
                 }
             }
         }
