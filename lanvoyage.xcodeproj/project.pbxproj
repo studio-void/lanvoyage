@@ -370,8 +370,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/studio-void/VoidUtilities";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
 			};
 		};
 		E9F9E9942E4EF164005FFAD1 /* XCRemoteSwiftPackageReference "SwiftUIX" */ = {
