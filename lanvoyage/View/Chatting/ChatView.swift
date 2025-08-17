@@ -22,6 +22,8 @@ struct ChatView: View {
 
     private let chatModel: GenerativeModel
     private let summaryModel: GenerativeModel
+    
+    @AppStorage("userName") var userName: String = "GIST"
 
     init(autoFocus: Bool = true, onClose: @escaping () -> Void = {}) {
         self.autoFocus = autoFocus
@@ -124,7 +126,7 @@ struct ChatView: View {
                 Spacer(minLength: 0)
                 bubble(m.text, isUser: true)
                 VStack(spacing: 2) {
-                    Text("GIST").font(.caption2).foregroundColor(.gray)
+                    Text(userName).font(.caption2).foregroundColor(.gray)
                     userAvatar
                 }
             }

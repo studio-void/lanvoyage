@@ -7,6 +7,7 @@
 
 import SwiftUI
 import VoidUtilities
+import AlertToast
 
 struct QuickResponseChallengeView: View {
     @State var quickResponseData: QuickResponseData?
@@ -25,6 +26,8 @@ struct QuickResponseChallengeView: View {
     @State var isGrading: Bool = false
     @State var gradingDone: Bool = false
     @State var isPlaying = false
+    @State var awardedPoints = 0
+    @State var showToast = false
     @State var timer: Timer?
     @State var elapsedSeconds: Int = 0
     @State private var pointsAwardedForThisAttempt: Bool = false
@@ -202,8 +205,10 @@ struct QuickResponseChallengeView: View {
                                         if !pointsAwardedForThisAttempt {
                                             let score = result.score
                                             let pointsToAdd = computePoints(score: score, elapsed: elapsedAtStop)
+                                            awardedPoints = pointsToAdd
                                             userPointsManager.addPoints(pointsToAdd)
                                             pointsAwardedForThisAttempt = true
+                                            showToast = true
                                         }
                                         gradingDone = true
                                         generatingAvailable = true
@@ -297,6 +302,11 @@ struct QuickResponseChallengeView: View {
                     isPlaying = false
                 }
             }
+        }
+        .toast(isPresenting: $showToast, duration: 5, tapToDismiss: true) {
+            AlertToast(displayMode: .hud, type: .systemImage("p.circle.fill", Color.violet500), title: "+\(awardedPoints) XP", subTitle: "XP Granted")
+        } completion: {
+            showToast = false
         }
     }
 }

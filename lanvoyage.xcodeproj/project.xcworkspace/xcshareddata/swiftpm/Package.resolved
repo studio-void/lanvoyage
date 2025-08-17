@@ -1,5 +1,5 @@
 {
-  "originHash" : "dad2e1ed729505ee77751ac4e791b69d95f9c1a98ecdf57e3a79c36be0a270ea",
+  "originHash" : "bbe39c64d8138252c83e673a317fa8d9e50137ac10671c91c6340b977e7d55b5",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "bbe8b69694d7873315fd3a4ad41efe043e1c07c5",
         "version" : "1.2024072200.0"
+      }
+    },
+    {
+      "identity" : "alerttoast",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/elai950/AlertToast",
+      "state" : {
+        "revision" : "b39252eacd159904afd7d718bba0afabb87f2f2f",
+        "version" : "1.3.9"
       }
     },
     {
@@ -141,8 +150,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/studio-void/VoidUtilities",
       "state" : {
-        "branch" : "main",
-        "revision" : "cd88b738edd1bb8815e016565ad5a7b8c7351a7a"
+        "revision" : "9e8335fd142ca335fd8cdbe6e05e1acd73389346",
+        "version" : "1.1.0"
       }
     }
   ],
