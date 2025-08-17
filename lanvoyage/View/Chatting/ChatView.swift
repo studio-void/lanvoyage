@@ -8,6 +8,7 @@
 import SwiftUI
 import VoidUtilities
 import FirebaseAI
+import MarkdownUI
 
 struct ChatView: View {
     enum Role { case user, bot }
@@ -41,7 +42,7 @@ struct ChatView: View {
             """]
         )
         self.chatModel = ai.generativeModel(
-            modelName: "gemini-2.0-flash-001",
+            modelName: "gemini-2.5-flash",
             systemInstruction: systemPrompt
         )
 
@@ -71,6 +72,14 @@ struct ChatView: View {
     @FocusState private var focused: Bool
     @State private var busy = false
     @State private var summarizing = false
+
+    private func contentsFromMessages(limit: Int = 24) -> [ModelContent] {
+        let recent = messages.suffix(limit)
+        return recent.map { m in
+            let role = (m.role == .user) ? "user" : "model"
+            return ModelContent(role: role, parts: [m.text])
+        }
+    }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -145,8 +154,11 @@ struct ChatView: View {
     }
 
     private func bubble(_ text: String, isUser: Bool) -> some View {
-        Text(text)
+        Markdown(text)
             .font(.body)
+            .markdownTextStyle() {
+                ForegroundColor(isUser ? .white : .primary)
+            }
             .foregroundColor(isUser ? .white : .primary)
             .padding(.vertical, 10)
             .padding(.horizontal, 14)
@@ -200,7 +212,9 @@ struct ChatView: View {
 
         Task {
             do {
-                for try await chunk in try chatModel.generateContentStream(text) {
+                let history = contentsFromMessages(limit: 24)
+                let request = history + [ModelContent(role: "user", parts: [text])]
+                for try await chunk in try chatModel.generateContentStream(request) {
                     if let t = chunk.text, !t.isEmpty {
                         bot.text += t
                         messages[botIndex] = bot
@@ -208,7 +222,9 @@ struct ChatView: View {
                 }
             } catch {
                 do {
-                    let res = try await chatModel.generateContent(text)
+                    let history = contentsFromMessages(limit: 24)
+                    let request = history + [ModelContent(role: "user", parts: [text])]
+                    let res = try await chatModel.generateContent(request)
                     bot.text = res.text ?? "(no response)"
                     messages[botIndex] = bot
                 } catch {
@@ -220,13 +236,14 @@ struct ChatView: View {
     }
 
     private func saveSummaryAndClose() {
-        summarizing = true
-        Task {
-            let joined = messages.suffix(12).map { m in
-                (m.role == .user ? "학생: " : "AI: ") + m.text.replacingOccurrences(of: "\n", with: " ")
-            }.joined(separator: "\n")
-
-            let prompt = """
+        if !summarizing {
+            summarizing = true
+            Task {
+                let joined = messages.suffix(12).map { m in
+                    (m.role == .user ? "학생: " : "AI: ") + m.text.replacingOccurrences(of: "\n", with: " ")
+                }.joined(separator: "\n")
+                
+                let prompt = """
             대화를 카드로 요약하라.
             title: 대화 주제(최대 12자)
             keyword: 발음 교정/문법/문맥 이해/시사 영어/비즈니스/발표/에세이/어휘/리스닝/학습 중 하나
@@ -234,42 +251,45 @@ struct ChatView: View {
             대화:
             \(joined)
             """
-
-            var title = "AI 영어 학습"
-            var keyword = "학습"
-            var details = "표현 3개 만들기"
-
-            do {
-                let res = try await summaryModel.generateContent(prompt)
-                if let text = res.text, let data = text.data(using: .utf8) {
-                    if let parsed = try? JSONDecoder().decode(CardJSON.self, from: data) {
-                        title   = limit(parsed.title,   to: 12)
-                        keyword = parsed.keyword
-                        details = sanitizeTo16(parsed.details)
+                
+                var title = "AI 영어 학습"
+                var keyword = "학습"
+                var details = "표현 3개 만들기"
+                
+                do {
+                    let res = try await summaryModel.generateContent(prompt)
+                    if let text = res.text, let data = text.data(using: .utf8) {
+                        if let parsed = try? JSONDecoder().decode(CardJSON.self, from: data) {
+                            title   = limit(parsed.title,   to: 12)
+                            keyword = parsed.keyword
+                            details = sanitizeTo16(parsed.details)
+                        }
                     }
+                } catch {
+                    let lastAsk = messages.last(where: { $0.role == .user })?.text ?? ""
+                    let cat = heuristicCategory(from: lastAsk)
+                    title   = limit(cat.title,   to: 12)
+                    keyword = cat.keyword
+                    details = "표현 3개 만들기"
                 }
-            } catch {
-                let lastAsk = messages.last(where: { $0.role == .user })?.text ?? ""
-                let cat = heuristicCategory(from: lastAsk)
-                title   = limit(cat.title,   to: 12)
-                keyword = cat.keyword
-                details = "표현 3개 만들기"
+                
+                let summary = ChatSummary(
+                    id: UUID().uuidString,
+                    title: title,
+                    snippet: details,
+                    timestamp: Date(),
+                    topic: keyword,
+                    messageCount: messages.count
+                )
+                ChatStore.append(summary)
+                
+                summarizing = false
+                withAnimation(.spring(response: 0.36, dampingFraction: 0.9, blendDuration: 0.2)) {
+                    onClose()
+                }
             }
-
-            let summary = ChatSummary(
-                id: UUID().uuidString,
-                title: title,
-                snippet: details,
-                timestamp: Date(),
-                topic: keyword,
-                messageCount: messages.count
-            )
-            ChatStore.append(summary)
-
-            summarizing = false
-            withAnimation(.spring(response: 0.36, dampingFraction: 0.9, blendDuration: 0.2)) {
-                onClose()
-            }
+        } else {
+            print("Already called saveSummaryAndClose(). Abort.")
         }
     }
 

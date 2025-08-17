@@ -1,5 +1,5 @@
 {
-  "originHash" : "05961d3e67ee38a570ea431e2bc8427761d8115d02a0684f9371ca93cc0a0509",
+  "originHash" : "88ec8051b69e48282d6261b6c0e39ef21fa18f2faa4dabd7dba2214375112ae4",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -119,12 +119,39 @@
       }
     },
     {
+      "identity" : "networkimage",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/gonzalezreal/NetworkImage",
+      "state" : {
+        "revision" : "2849f5323265386e200484b0d0f896e73c3411b9",
+        "version" : "6.0.1"
+      }
+    },
+    {
       "identity" : "promises",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/promises.git",
       "state" : {
         "revision" : "540318ecedd63d883069ae7f1ed811a2df00b6ac",
         "version" : "2.4.0"
+      }
+    },
+    {
+      "identity" : "swift-cmark",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-cmark",
+      "state" : {
+        "revision" : "b022b08312decdc46585e0b3440d97f6f22ef703",
+        "version" : "0.6.0"
+      }
+    },
+    {
+      "identity" : "swift-markdown-ui",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/gonzalezreal/swift-markdown-ui",
+      "state" : {
+        "revision" : "5f613358148239d0292c0cef674a3c2314737f9e",
+        "version" : "2.4.1"
       }
     },
     {
@@ -150,8 +177,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/studio-void/VoidUtilities",
       "state" : {
-        "revision" : "9e8335fd142ca335fd8cdbe6e05e1acd73389346",
-        "version" : "1.1.0"
+        "revision" : "3c32a49e7b878df6b2b5ab6fdf40a5569cd71822",
+        "version" : "1.1.1"
       }
     }
   ],

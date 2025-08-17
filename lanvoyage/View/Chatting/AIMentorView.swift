@@ -95,10 +95,11 @@ struct ChattingMainView: View {
             summaries = ChatStore.load()
             isPressing = false
         }) {
-            NavigationStack {
+            NavigationView {
                 ChatView(autoFocus: true) {
                     showChat = false
                 }
+                .background(Color.white)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbarBackground(.visible, for: .navigationBar)
                 .toolbar(.visible, for: .navigationBar)

@@ -60,14 +60,16 @@ struct HomeView: View {
                             title: "Translation Challenge",
                             description:
                                 "주어진 상황에 맞는 대답을 영작한 후, 발음까지 테스트해 보세요!"
+                        ) 
+                    }
+                    NavigationLink(destination: LearnModeView().navigationBarBackButtonHidden()) {
+                        RecommendedLearningCardView(
+                            image: Image("aiToolsExploration"),
+                            title: "AI Tools Exploration",
+                            description:
+                                "Discover and experiment with various AI tools and applications."
                         )
                     }
-                    RecommendedLearningCardView(
-                        image: Image("aiToolsExploration"),
-                        title: "AI Tools Exploration",
-                        description:
-                            "Discover and experiment with various AI tools and applications."
-                    )
                 }
             }
         }
