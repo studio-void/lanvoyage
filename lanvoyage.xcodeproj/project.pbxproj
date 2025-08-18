@@ -286,7 +286,7 @@
 				DEVELOPMENT_TEAM = J9ZM2PBPP6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Lan Voyagee";
+				INFOPLIST_KEY_CFBundleDisplayName = "Lan Voyage";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "(필수) 언어 학습을 위해 마이크 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -320,7 +320,7 @@
 				DEVELOPMENT_TEAM = J9ZM2PBPP6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Lan Voyagee";
+				INFOPLIST_KEY_CFBundleDisplayName = "Lan Voyage";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "(필수) 언어 학습을 위해 마이크 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
